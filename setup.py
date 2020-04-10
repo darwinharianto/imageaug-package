@@ -8,6 +8,6 @@ setup(
     author='Darwin Harianto',
     author_email='hariantodarwin@gmail.com',
     license='unlicense',
-    packages=['imageaug', 'imgaug'],
+    packages=['imageaug'],
     zip_safe=False
 )
