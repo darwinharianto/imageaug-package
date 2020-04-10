@@ -1,0 +1,9 @@
+[
+  {
+    "p": [
+      0,
+      0.5
+    ],
+    "class_name": "CoarseDropout"
+  }
+]

@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: imageaug
+Version: 0.0.1
+Summary: Currently used as a wrapper for imgaug by aleju
+Home-page: git@github.com:darwinharianto/imageaug-package.git
+Author: Darwin Harianto
+Author-email: hariantodarwin@gmail.com
+License: unlicense
+Description: UNKNOWN
+Platform: UNKNOWN

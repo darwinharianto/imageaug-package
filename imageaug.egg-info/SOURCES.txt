@@ -1,0 +1,11 @@
+README.md
+setup.py
+imageaug/__init__.py
+imageaug/aug_mode.py
+imageaug/base.py
+imageaug.egg-info/PKG-INFO
+imageaug.egg-info/SOURCES.txt
+imageaug.egg-info/dependency_links.txt
+imageaug.egg-info/not-zip-safe
+imageaug.egg-info/requires.txt
+imageaug.egg-info/top_level.txt
