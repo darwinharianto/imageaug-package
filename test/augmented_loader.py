@@ -41,6 +41,7 @@ def load_settings(handler_save_path: str):
 
     return handler
 
+
 def perform_augmentation(dataset_dict, handler: AugHandler):
 
     image = utils.read_image(dataset_dict["file_name"], format="BGR")
@@ -51,25 +52,50 @@ def perform_augmentation(dataset_dict, handler: AugHandler):
     ann_instance = 0
 
     for item in dataset_dict["annotations"]:
-
-        item["keypoints"] = Keypoint2D_List.from_numpy(np.array(item["keypoints"]))
-        item["bbox"] = BBox(xmin=item["bbox"][0], xmax=item["bbox"][0]+item["bbox"][2], ymin=item["bbox"][1], ymax=item["bbox"][1]+item["bbox"][3])
-        item["segmentation"] = Segmentation.from_list(item["segmentation"])
-
-        keypoints_num = len(item["keypoints"])
         ann_instance += 1
-        keypoints.append(item["keypoints"])
-        bbox.append(item["bbox"])
-        segmentation.append(item["segmentation"])
-        item["bbox_mode"] = BoxMode.XYXY_ABS
+        if "keypoints" in item:
+            item["keypoints"] = Keypoint2D_List.from_numpy(np.array(item["keypoints"]))
+            keypoints_num = len(item["keypoints"])
+            keypoints.append(item["keypoints"])
 
+        if "segmentation" in item:
+            item["segmentation"] = Segmentation.from_list(item["segmentation"])
+            segmentation.append(item["segmentation"])
+        if "bbox" in item:
+            item["bbox"] = BBox(xmin=item["bbox"][0], xmax=item["bbox"][0]+item["bbox"][2], ymin=item["bbox"][1], ymax=item["bbox"][1]+item["bbox"][3])
+            bbox.append(item["bbox"])
+            item["bbox_mode"] = BoxMode.XYXY_ABS
+    print(bbox)
 
-    image, keypoints, bbox, poly = handler(image=image, keypoints= keypoints, bounding_boxes=bbox, polygons=segmentation)
-    kpts_aug_list = keypoints[0].to_numpy(demarcation=True)[:, :2].reshape(ann_instance, keypoints_num, 2)
-    kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
-    keypoints = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
+    if len(keypoints) != 0 and len(bbox) != 0 and len(segmentation) != 0:
+        image, keypoints, bbox, poly = handler(image=image, keypoints= keypoints, bounding_boxes=bbox, polygons=segmentation)
+        kpts_aug_list = keypoints[0].to_numpy(demarcation=True)[:, :2].reshape(ann_instance, keypoints_num, 2)
+        kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
+        keypoints = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
+    elif len(keypoints) == 0 and len(bbox) != 0 and len(segmentation) != 0:
+        image,  bbox, poly = handler(image=image, bounding_boxes=bbox, polygons=segmentation)
+    elif len(keypoints) != 0 and len(bbox) != 0 and len(segmentation) == 0:
+        image, keypoints, bbox = handler(image=image, keypoints= keypoints, bounding_boxes=bbox)
+        kpts_aug_list = keypoints[0].to_numpy(demarcation=True)[:, :2].reshape(ann_instance, keypoints_num, 2)
+        kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
+        keypoints = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
+    elif len(keypoints) != 0 and len(bbox) == 0 and len(segmentation) != 0:
+        image, keypoints, poly = handler(image=image, keypoints= keypoints, polygons=segmentation)
+        kpts_aug_list = keypoints[0].to_numpy(demarcation=True)[:, :2].reshape(ann_instance, keypoints_num, 2)
+        kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
+        keypoints = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
+    elif len(keypoints) != 0 and len(bbox) == 0 and len(segmentation) == 0:
+        image, keypoints = handler(image=image, keypoints= keypoints)
+        kpts_aug_list = keypoints[0].to_numpy(demarcation=True)[:, :2].reshape(ann_instance, keypoints_num, 2)
+        kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
+        keypoints = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
+    elif len(keypoints) == 0 and len(bbox) != 0 and len(segmentation) == 0:
+        image, bbox = handler(image=image, bounding_boxes=bbox)
+    elif len(keypoints) == 0 and len(bbox) == 0 and len(segmentation) != 0:
+        image, poly = handler(image=image, polygons=segmentation)
 
     annots = []
+
     for i in range(len(dataset_dict["annotations"])):
         item = dataset_dict["annotations"][i]
         if "keypoints" in item:
@@ -110,13 +136,14 @@ def mapper(dataset_dict):
         vis_img = image.copy()
         bbox_list = [BBox.from_list(vals) for vals in dataset_dict["instances"].gt_boxes.tensor.numpy().tolist()]
         seg_list = [Segmentation([Polygon.from_list(poly.tolist(), demarcation=False) for poly in seg_polys]) for seg_polys in dataset_dict["instances"].gt_masks.polygons]
-        kpts_list = [Keypoint2D_List.from_numpy(arr, demarcation=True) for arr in dataset_dict["instances"].gt_keypoints.tensor.numpy()]
+        # kpts_list = [Keypoint2D_List.from_numpy(arr, demarcation=True) for arr in dataset_dict["instances"].gt_keypoints.tensor.numpy()]
         # print(bbox_list, seg_list, kpts_list)
-        for bbox, seg, kpts in zip(bbox_list, seg_list, kpts_list):
+        # for bbox, seg, kpts in zip(bbox_list, seg_list, kpts_list):
+        for bbox, seg in zip(bbox_list, seg_list):
             if len(seg) > 0 and False:
                 vis_img = draw_segmentation(img=vis_img, segmentation=seg, transparent=True)
             vis_img = draw_bbox(img=vis_img, bbox=bbox)
-            vis_img = draw_keypoints(img=vis_img, keypoints=kpts.to_numpy(demarcation=True)[:, :2].tolist(), radius=1)
+            # vis_img = draw_keypoints(img=vis_img, keypoints=kpts.to_numpy(demarcation=True)[:, :2].tolist(), radius=1)
         cv2.imshow("a", vis_img)
         cv2.waitKey(5000)
         # aug_visualizer.step(vis_img)
@@ -130,6 +157,9 @@ if __name__ == "__main__":
     with open('/Users/darwinharianto/Desktop/hayashida/Unreal/18_03_2020_18_03_10_coco-data/HSR-detectron.json') as f:
         dataset_dicts = json.loads(f.read())
     for dataset_dict in dataset_dicts:
+        print(dataset_dict)
+        for item in dataset_dict["annotations"]:
+            del item["keypoints"]
         dataset_dict = mapper(dataset_dict)
         break
     # dataset_dict = mapper(dataset_dict)
