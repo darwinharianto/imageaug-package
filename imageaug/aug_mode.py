@@ -4,12 +4,22 @@ import json
 import operator
 import random
 import imgaug as ia
+import numpy as np
 import imgaug.augmenters as iaa
 from logger import logger
 from common_utils.check_utils import check_required_keys, \
     check_file_exists, check_list_length, check_type, \
     check_type_from_list
+
+from common_utils.cv_drawing_utils import cv_simple_image_viewer, draw_bbox, draw_keypoints, draw_segmentation
+from common_utils.common_types.keypoint import Keypoint2D_List, Keypoint2D
+from common_utils.common_types.bbox import BBox
+from common_utils.common_types.segmentation import Segmentation, Polygon
 from common_utils.file_utils import file_exists
+
+from imgaug.augmentables.polys import PolygonsOnImage
+from imgaug.augmentables.kps import KeypointsOnImage
+from imgaug.augmentables.bbs import BoundingBoxesOnImage
 
 from .base import BaseMode, BaseModeHandler
 import inspect
@@ -22,8 +32,8 @@ def check_param(class_name: str, param_name: str, value, lower_limit=None, upper
 
 def check_param_range(class_name: str, param_name: str, value: list, lower_limit=None, upper_limit=None):
     check_list_length(value, correct_length=2, ineq_type='eq')
-    if value[0] >= value[1]:
-        logger.error(f'Encountered {class_name}.{param_name} value[0] >= value[1]')
+    if value[0] > value[1]:
+        logger.error(f'Encountered {class_name}.{param_name} value[0] > value[1]')
         logger.error(f'value: {value}')
         raise Exception
     check_param(class_name=class_name, param_name=f'lower {param_name}', lower_limit=lower_limit, upper_limit=upper_limit, value=value[0])
@@ -169,21 +179,71 @@ class Superpixels(BaseMode['Superpixels']):
         return Superpixels(p_replace=working_dict['p_replace'], n_segments=working_dict['n_segments'])
 
 class Affine(BaseMode['Affine']):
-    def __init__(self):
-        raise NotImplementedError
+    def __init__(self, scale: dict = {"x": tuple([0.8, 1.2]), "y":tuple([0.8, 1.2])}, translate_percent: dict = {"x": tuple([0, 0]), "y":tuple([0, 0])}, rotate: list[float] = [-180, 180], order: list[float] = [0, 1], cval: list[float] = [0, 255], shear: list[float] = [0,1]):
+        if len(rotate) == 2:
+            check_param_range(
+                class_name=self.__class__.__name__,
+                param_name='rotate',
+                lower_limit=-180,
+                upper_limit=180,
+                value=rotate
+            )
+        check_param_range(
+            class_name=self.__class__.__name__,
+            param_name='order',
+            lower_limit=0,
+            upper_limit=1,
+            value=order
+        )
+        check_param_range(
+            class_name=self.__class__.__name__,
+            param_name='cval',
+            lower_limit=0,
+            upper_limit=255,
+            value=cval
+        )
+        check_param_range(
+            class_name=self.__class__.__name__,
+            param_name='shear',
+            lower_limit=0,
+            upper_limit=10,
+            value=shear
+        )
+        self.scale = scale
+        self.translate_percent = translate_percent
+        self.rotate = rotate
+        self.order = order
+        self.cval = cval
+        self.shear = shear
+        for item in translate_percent:
+            if any([item >0.2 for item in translate_percent[item]]):
+                logger.yellow(f"high translation on {item} detected, object could be out of image")
+        if len(rotate) == 2:
+            super().__init__(aug=iaa.Affine(scale = scale, translate_percent = translate_percent, rotate = tuple(rotate), order = order, cval = tuple(cval), shear=tuple(shear)))
+        else:
+            super().__init__(aug=iaa.Affine(scale = scale, translate_percent = translate_percent, rotate = rotate, order = order, cval = tuple(cval), shear=tuple(shear)))
+
+    def change_rotate_to_right_angle(self) -> Affine:
+        self.rotate = [0,90,180,270]
+        return Affine(scale = self.scale, translate_percent= self.translate_percent, rotate = self.rotate, order = self.order, cval=self.cval, shear=self.shear)
 
     @classmethod
-    def from_dict(cls, mode_dict: dict) -> Superpixels:
+    def from_dict(cls, mode_dict: dict) -> Affine:
         working_dict = mode_dict.copy()
+
         if working_dict['class_name'] != cls.__name__:
             logger.error(f"working_dict['class_name'] == {working_dict['class_name']} != {cls.__name__}")
             raise Exception
         del working_dict['class_name']
         check_required_keys(
             item_dict=working_dict,
-            required_keys=['n_segments', 'p_replace']
+            required_keys=['scale', 'translate_percent', 'rotate', 'order', 'cval', 'shear']
         )
-        return Superpixels(p_replace=working_dict['p_replace'], n_segments=working_dict['n_segments'])
+        working_dict["scale"]["x"] = tuple( working_dict["scale"]["x"])
+        working_dict["scale"]["y"] = tuple( working_dict["scale"]["y"])
+        working_dict["translate_percent"]["x"] = tuple( working_dict["translate_percent"]["x"])
+        working_dict["translate_percent"]["x"] = tuple( working_dict["translate_percent"]["x"])
+        return Affine(scale = working_dict['scale'], translate_percent= working_dict['translate_percent'], rotate = working_dict['rotate'], order = working_dict['order'], cval=tuple(working_dict['cval']), shear=tuple(working_dict['shear']))
 
 class Sharpen(BaseMode['Sharpen']):
     def __init__(self, alpha: list[float]= [0,1.0], lightness:list[float]=[0.75,1.5]):
@@ -824,8 +884,90 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
         self.aug_modes = self.obj_list
 
     def __call__(self, *args, **kwargs):
+
+        if "polygons" not in kwargs:
+            logger.red("polygons not found. Only rotate 90, 180, 270, 360")
+            for i in range(len(self.aug_modes)) :
+                items = self.aug_modes[i]
+                if isinstance(items, Affine):
+                    logger.red("change affine")
+                    self.aug_modes[i] = self.aug_modes[i].change_rotate_to_right_angle()
+        
+        for k,v in kwargs.items():
+            if k == "image":
+                imgaug_kpts = KeypointsOnImage(keypoints=[], shape=kwargs["image"].shape)
+                imgaug_bboxes = BoundingBoxesOnImage(bounding_boxes=[], shape=kwargs["image"].shape)
+                imgaug_polys = PolygonsOnImage(polygons=[], shape=kwargs["image"].shape)
+            if k == "keypoints":
+                for item in v:
+                    # keypoints_iaa = v.to_imgaug(img_shape=kwargs["image"].shape).keypoints
+                    imgaug_kpts.keypoints.extend(item.to_imgaug(img_shape=kwargs["image"].shape).keypoints)
+                kwargs["keypoints"] = imgaug_kpts
+            if k == "polygons":
+                for item in v:
+                    # polygons_iaa =  v.to_imgaug(img_shape=kwargs["image"].shape).polygons
+                    imgaug_polys.polygons.extend(item.to_imgaug(img_shape=kwargs["image"].shape).polygons)
+                kwargs["polygons"] = imgaug_polys
+            if k == "bounding_boxes":
+                for item in v:
+                    # bboxes_iaa = v.to_imgaug()
+                    imgaug_bboxes.bounding_boxes.append(item.to_imgaug())
+                kwargs["bounding_boxes"] = imgaug_bboxes
+        
+        for item in self.aug_modes:
+
+            print(item)
+
         seq = iaa.Sequential([aug_mode.aug for aug_mode in self.aug_modes])
-        return seq(*args, **kwargs)
+        a = seq(*args, **kwargs)
+        image = a[0]
+
+        for items in a:
+            if isinstance(items, KeypointsOnImage):
+                kpts_aug0 = Keypoint2D_List.from_imgaug(imgaug_kpts=items)
+                kpts_aug_list = kpts_aug0.to_numpy(demarcation=True)[:, :2].reshape(1, len(kpts_aug0), 2)
+                kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
+                kpts_aug_list = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
+            if isinstance(items, BoundingBoxesOnImage):
+                bbox_aug_list = [BBox.from_imgaug(bbox_aug) for bbox_aug in items.bounding_boxes]
+            if isinstance(items, PolygonsOnImage):
+                poly_aug_list = [Polygon.from_imgaug(imgaug_polygon) for imgaug_polygon in items.polygons]
+                bbox_aug_list_from_poly = [poly_aug.to_bbox() for poly_aug in poly_aug_list]
+                # Adjust BBoxes when Segmentation BBox does not contain all keypoints
+                # TODO need to consider this method
+                # for i in range(len(bbox_aug_list_from_poly)):
+                #     kpt_points_aug = [kpt_aug.point for kpt_aug in kpts_aug_list[i]]
+                #     kpt_points_aug_contained = [kpt_point_aug.within(bbox_aug_list_from_poly[i]) for kpt_point_aug in kpt_points_aug]
+                #     if not np.any(np.array(kpt_points_aug_contained)):
+                #         logger.error(f"Keypoints not contained in corresponding bbox.")
+                #     else:
+                #         if not np.all(np.array(kpt_points_aug_contained)):
+                #             kpt_points_aug_arr = np.array([kpt_point_aug.to_list() for kpt_point_aug in kpt_points_aug])
+                #             kpt_points_aug_arr = kpt_points_aug_arr[~np.all(kpt_points_aug_arr == 0, axis=1)]
+                #             kpt_xmin, kpt_ymin = np.min(kpt_points_aug_arr, axis=0).tolist()
+                #             kpt_xmax, kpt_ymax = np.max(kpt_points_aug_arr, axis=0).tolist()
+                #             bbox_aug_list_from_poly[i].xmin = kpt_xmin if kpt_xmin < bbox_aug_list_from_poly[i].xmin and kpt_xmin != 0 else bbox_aug_list_from_poly[i].xmin
+                #             bbox_aug_list_from_poly[i].ymin = kpt_ymin if kpt_ymin < bbox_aug_list_from_poly[i].ymin and kpt_xmin != 0 else bbox_aug_list_from_poly[i].ymin
+                #             bbox_aug_list_from_poly[i].xmax = kpt_xmax if kpt_xmax > bbox_aug_list_from_poly[i].xmax and kpt_xmin != 0 else bbox_aug_list_from_poly[i].xmax
+                #             bbox_aug_list_from_poly[i].ymax = kpt_ymax if kpt_ymax > bbox_aug_list_from_poly[i].ymax and kpt_xmin != 0 else bbox_aug_list_from_poly[i].ymax
+                #         break
+
+                seg_aug_list = [Segmentation([poly_aug]) for poly_aug in poly_aug_list]
+
+        if 'bbox_aug_list_from_poly' in locals():
+            if 'bbox_aug_list' in locals():
+                bbox_aug_list = bbox_aug_list_from_poly
+
+        if 'poly_aug_list' in locals():
+            a = (image, bbox_aug_list, poly_aug_list)
+            if 'kpts_aug_list' in locals():
+                a = (image, kpts_aug_list, bbox_aug_list, poly_aug_list)
+        elif 'bbox_aug_list' in locals():
+            a = (image, bbox_aug_list)
+            if 'kpts_aug_list' in locals():
+                a = (image, kpts_aug_list, bbox_aug_list)
+
+        return a
 
     @classmethod
     def from_dict_list(cls, dict_list: List[dict]) -> AugHandler:
@@ -835,8 +977,6 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                 aug_modes.append(Fliplr.from_dict(dict_item))
             elif dict_item['class_name'] == 'Flipud':
                 aug_modes.append(Flipud.from_dict(dict_item))
-            elif dict_item['class_name'] == 'Resize':
-                aug_modes.append(Resize.from_dict(dict_item))
             elif dict_item['class_name'] == 'Crop':
                 aug_modes.append(Crop.from_dict(dict_item))
             elif dict_item['class_name'] == 'Superpixels':
@@ -883,6 +1023,8 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                 aug_modes.append(Dropout.from_dict(dict_item))
             elif dict_item['class_name'] == 'CoarseDropout':
                 aug_modes.append(CoarseDropout.from_dict(dict_item))
+            elif dict_item['class_name'] == 'Resize':
+                aug_modes.append(Resize.from_dict(dict_item))
             else:
                 logger.error(f"Invalid class_name: {dict_item['class_name']}")
                 raise Exception
