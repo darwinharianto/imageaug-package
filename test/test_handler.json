@@ -1,9 +1,53 @@
 [
   {
+    "scale": {
+      "x": [
+        0.8,
+        1.2
+      ],
+      "y": [
+        0.8,
+        1.2
+      ]
+    },
+    "translate_percent": {
+      "x": [
+        0,
+        0.05
+      ],
+      "y": [
+        0,
+        0.05
+      ]
+    },
+    "rotate": [
+      -180,
+      180
+    ],
+    "order": [
+      0,
+      0
+    ],
+    "cval": [
+      0,
+      0
+    ],
+    "shear": [
+      0,
+      0
+    ],
+    "class_name": "Affine"
+  },
+  {
     "p": [
       0,
       0.5
     ],
     "class_name": "CoarseDropout"
+  },
+  {
+    "width": 900,
+    "height": 900,
+    "class_name": "Resize"
   }
 ]

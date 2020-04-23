@@ -4,6 +4,7 @@ from common_utils.image_utils import concat_n_images
 from common_utils.cv_drawing_utils import cv_simple_image_viewer
 from common_utils.file_utils import file_exists
 import cv2
+from common_utils.common_types.keypoint import Keypoint2D_List, Keypoint2D
 
 
 from imageaug import AugHandler, Augmenter as aug
@@ -38,6 +39,7 @@ else:
 
     handler = AugHandler(
         [
+            # aug.Affine(scale = {"x": tuple([0.8, 1.2]), "y":tuple([0.8, 1.2])}, translate_percent= {"x": tuple([0.8, 1.2]), "y":tuple([0.8, 1.2])}, rotate= [-180, 180], order= [0, 1], cval= [0, 255], shear= [0,1]),
             # aug.Crop(percent=[0.2, 0.5]),
             # aug.Flipud(p=0.5),
             # aug.Superpixels(),
@@ -59,6 +61,7 @@ else:
             # aug.DirectedEdgeDetect(alpha=[0,0.5], direction=[0,1]),
             # aug.Dropout(p=[0,0.05], per_channel=False),
             aug.CoarseDropout(p=[0,0.5]),
+            aug.Resize()
 
         ]
     )
@@ -69,13 +72,36 @@ img_buffer = []
 for coco_image in dataset.images:
     img = cv2.imread(coco_image.coco_url)
     img_buffer.append(img)
-    if len(img_buffer) == 3:
-        results = handler(images=img_buffer)
 
-        preview0 = concat_n_images(img_list=resize(images=img_buffer), orientation=0)
-        preview1 = concat_n_images(img_list=resize(images=results), orientation=0)
-        preview = concat_n_images(img_list=[preview0, preview1], orientation=1)
-        img_buffer = []
-        quit_flag = cv_simple_image_viewer(img=preview, preview_width=1000)
-        if quit_flag:
-            break
+    keypoints = []
+    bbox = []
+    segmentation = []
+    ann_instance = 0
+
+    for item in dataset.annotations:
+        if item.image_id == coco_image.id:
+            keypoints_num = len(item.keypoints)
+            ann_instance += 1
+
+            keypoints.append(item.keypoints)
+            bbox.append(item.bbox)
+            segmentation.append(item.segmentation)
+
+
+    image, keypoints, bbox, poly = handler(image=img, keypoints= keypoints, bounding_boxes=bbox, polygons=segmentation)
+    kpts_aug_list = keypoints[0].to_numpy(demarcation=True)[:, :2].reshape(ann_instance, keypoints_num, 2)
+    kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
+    keypoints = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
+
+    print(image, keypoints, bbox, poly)
+    # break
+
+        # print(results)
+
+    #     preview0 = concat_n_images(img_list=resize(images=img_buffer), orientation=0)
+    #     preview1 = concat_n_images(img_list=resize(images=results), orientation=0)
+    #     preview = concat_n_images(img_list=[preview0, preview1], orientation=1)
+    #     img_buffer = []
+    #     quit_flag = cv_simple_image_viewer(img=preview, preview_width=1000)
+    #     if quit_flag:
+    #         break
