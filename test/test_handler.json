@@ -43,7 +43,8 @@
       0,
       0.5
     ],
-    "class_name": "CoarseDropout"
+    "class_name": "CoarseDropout",
+    "frequency": 0.2
   },
   {
     "width": 900,

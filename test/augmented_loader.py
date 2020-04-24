@@ -97,7 +97,6 @@ def perform_augmentation(dataset_dict, handler: AugHandler):
             item["keypoints"] = np.asarray(keypoints[i].to_list(), dtype="float64").reshape(-1,3)
         if "bbox" in item:
             item["bbox"] = bbox[i].to_list()
-            print(item["bbox"])
         if "segmentation" in item:
             item["segmentation"] = [poly[i].to_list()]
         annots.append(item)
@@ -140,7 +139,7 @@ def mapper(dataset_dict):
             vis_img = draw_bbox(img=vis_img, bbox=bbox)
             # vis_img = draw_keypoints(img=vis_img, keypoints=kpts.to_numpy(demarcation=True)[:, :2].tolist(), radius=1)
         cv2.imshow("a", vis_img)
-        cv2.waitKey(5000)
+        cv2.waitKey(100)
         # aug_visualizer.step(vis_img)
 
     return dataset_dict
@@ -152,10 +151,8 @@ if __name__ == "__main__":
     with open('/Users/darwinharianto/Desktop/hayashida/Unreal/18_03_2020_18_03_10_coco-data/HSR-detectron.json') as f:
         dataset_dicts = json.loads(f.read())
     for dataset_dict in dataset_dicts:
-        print(dataset_dict)
         for item in dataset_dict["annotations"]:
             del item["keypoints"]
         dataset_dict = mapper(dataset_dict)
-        break
     # dataset_dict = mapper(dataset_dict)
     # data_loader = build_detection_train_loader(cfg, mapper=mapper)
