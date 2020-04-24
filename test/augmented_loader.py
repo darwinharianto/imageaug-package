@@ -33,12 +33,8 @@ def load_settings(handler_save_path: str):
             ]
         )
         handler.save_to_path(save_path=handler_save_path, overwrite=True)
-        logger.info(f'Created new AugHandler save.')
     else:
         handler = AugHandler.load_from_path(handler_save_path)
-        handler.save_to_path(save_path=handler_save_path, overwrite=True)
-        logger.info(f'Loaded AugHandler from save.')
-
     return handler
 
 
@@ -65,7 +61,6 @@ def perform_augmentation(dataset_dict, handler: AugHandler):
             item["bbox"] = BBox(xmin=item["bbox"][0], xmax=item["bbox"][0]+item["bbox"][2], ymin=item["bbox"][1], ymax=item["bbox"][1]+item["bbox"][3])
             bbox.append(item["bbox"])
             item["bbox_mode"] = BoxMode.XYXY_ABS
-    print(bbox)
 
     if len(keypoints) != 0 and len(bbox) != 0 and len(segmentation) != 0:
         image, keypoints, bbox, poly = handler(image=image, keypoints= keypoints, bounding_boxes=bbox, polygons=segmentation)
