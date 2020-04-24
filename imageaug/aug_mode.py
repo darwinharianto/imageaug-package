@@ -913,10 +913,6 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                     # bboxes_iaa = v.to_imgaug()
                     imgaug_bboxes.bounding_boxes.append(item.to_imgaug())
                 kwargs["bounding_boxes"] = imgaug_bboxes
-        
-        for item in self.aug_modes:
-
-            print(item)
 
         seq = iaa.Sequential([aug_mode.aug for aug_mode in self.aug_modes])
         a = seq(*args, **kwargs)
