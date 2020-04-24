@@ -40,7 +40,7 @@ def check_param_range(class_name: str, param_name: str, value: list, lower_limit
     check_param(class_name=class_name, param_name=f'upper {param_name}', lower_limit=lower_limit, upper_limit=upper_limit, value=value[1])
 
 class Fliplr(BaseMode['Fliplr']):
-    def __init__(self, p: float=0.5):
+    def __init__(self, p: float=0.5, frequency: float = None):
         check_param(
             class_name=self.__class__.__name__,
             param_name='p',
@@ -49,7 +49,7 @@ class Fliplr(BaseMode['Fliplr']):
             value=p
         )
         self.p = p
-        super().__init__(aug=iaa.Fliplr(p))
+        super().__init__(aug=iaa.Fliplr(p), frequency=frequency)
 
     @classmethod
     def from_dict(cls, mode_dict: dict) -> Fliplr:
@@ -62,10 +62,10 @@ class Fliplr(BaseMode['Fliplr']):
             item_dict=working_dict,
             required_keys=['p']
         )
-        return Fliplr(p=working_dict['p'])
+        return Fliplr(p=working_dict['p'], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Flipud(BaseMode['Flipud']):
-    def __init__(self, p: float=0.5):
+    def __init__(self, p: float=0.5, frequency: float = None):
         check_param(
             class_name=self.__class__.__name__,
             param_name='p',
@@ -74,7 +74,7 @@ class Flipud(BaseMode['Flipud']):
             value=p
         )
         self.p = p
-        super().__init__(aug=iaa.Flipud(p))
+        super().__init__(aug=iaa.Flipud(p), frequency=frequency)
 
     @classmethod
     def from_dict(cls, mode_dict: dict) -> Flipud:
@@ -87,10 +87,10 @@ class Flipud(BaseMode['Flipud']):
             item_dict=working_dict,
             required_keys=['p']
         )
-        return Flipud(p=working_dict['p'])
+        return Flipud(p=working_dict['p'], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Resize(BaseMode['Resize']):
-    def __init__(self, width: int=900, height: int=900):
+    def __init__(self, width: int=900, height: int=900, frequency: float = None):
         check_param(
             class_name=self.__class__.__name__,
             param_name='width',
@@ -105,7 +105,7 @@ class Resize(BaseMode['Resize']):
         )
         self.width = width
         self.height = height
-        super().__init__(aug=iaa.Resize(size=(width, height)))
+        super().__init__(aug=iaa.Resize(size=(width, height)), frequency=frequency)
     
     @classmethod
     def from_dict(cls, mode_dict: dict) -> Resize:
@@ -118,10 +118,10 @@ class Resize(BaseMode['Resize']):
             item_dict=working_dict,
             required_keys=['width', 'height']
         )
-        return Resize(width=working_dict['width'], height=working_dict['height'])
+        return Resize(width=working_dict['width'], height=working_dict['height'], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Crop(BaseMode['Crop']):
-    def __init__(self, percent: List[float]=[0, 0.3]):
+    def __init__(self, percent: List[float]=[0, 0.3], frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='percent',
@@ -130,7 +130,7 @@ class Crop(BaseMode['Crop']):
             value=percent
         )
         self.percent = percent
-        super().__init__(aug=iaa.Crop(percent=tuple(percent)))
+        super().__init__(aug=iaa.Crop(percent=tuple(percent)), frequency=frequency)
 
     @classmethod
     def from_dict(cls, mode_dict: dict) -> Crop:
@@ -143,10 +143,10 @@ class Crop(BaseMode['Crop']):
             item_dict=working_dict,
             required_keys=['percent']
         )
-        return Crop(percent=working_dict['percent'])
+        return Crop(percent=working_dict['percent'], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Superpixels(BaseMode['Superpixels']):
-    def __init__(self, p_replace: List[float]=[0, 1.0], n_segments: List[int]=[20,200]):
+    def __init__(self, p_replace: List[float]=[0, 1.0], n_segments: List[int]=[20,200], frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='p_replace',
@@ -163,7 +163,7 @@ class Superpixels(BaseMode['Superpixels']):
         )
         self.p_replace = p_replace
         self.n_segments = n_segments
-        super().__init__(aug=iaa.Superpixels(p_replace=tuple(p_replace), n_segments=tuple(n_segments)))
+        super().__init__(aug=iaa.Superpixels(p_replace=tuple(p_replace), n_segments=tuple(n_segments)), frequency=frequency)
         
     @classmethod
     def from_dict(cls, mode_dict: dict) -> Superpixels:
@@ -176,10 +176,10 @@ class Superpixels(BaseMode['Superpixels']):
             item_dict=working_dict,
             required_keys=['n_segments', 'p_replace']
         )
-        return Superpixels(p_replace=working_dict['p_replace'], n_segments=working_dict['n_segments'])
+        return Superpixels(p_replace=working_dict['p_replace'], n_segments=working_dict['n_segments'], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Affine(BaseMode['Affine']):
-    def __init__(self, scale: dict = {"x": tuple([0.8, 1.2]), "y":tuple([0.8, 1.2])}, translate_percent: dict = {"x": tuple([0, 0]), "y":tuple([0, 0])}, rotate: list[float] = [-180, 180], order: list[float] = [0, 1], cval: list[float] = [0, 255], shear: list[float] = [0,1]):
+    def __init__(self, scale: dict = {"x": tuple([0.8, 1.2]), "y":tuple([0.8, 1.2])}, translate_percent: dict = {"x": tuple([0, 0]), "y":tuple([0, 0])}, rotate: list[float] = [-180, 180], order: list[float] = [0, 1], cval: list[float] = [0, 255], shear: list[float] = [0,1], frequency: float = None):
         if len(rotate) == 2:
             check_param_range(
                 class_name=self.__class__.__name__,
@@ -219,9 +219,9 @@ class Affine(BaseMode['Affine']):
             if any([item >0.2 for item in translate_percent[item]]):
                 logger.yellow(f"high translation on {item} detected, object could be out of image")
         if len(rotate) == 2:
-            super().__init__(aug=iaa.Affine(scale = scale, translate_percent = translate_percent, rotate = tuple(rotate), order = order, cval = tuple(cval), shear=tuple(shear)))
+            super().__init__(aug=iaa.Affine(scale = scale, translate_percent = translate_percent, rotate = tuple(rotate), order = order, cval = tuple(cval), shear=tuple(shear)), frequency=frequency)
         else:
-            super().__init__(aug=iaa.Affine(scale = scale, translate_percent = translate_percent, rotate = rotate, order = order, cval = tuple(cval), shear=tuple(shear)))
+            super().__init__(aug=iaa.Affine(scale = scale, translate_percent = translate_percent, rotate = rotate, order = order, cval = tuple(cval), shear=tuple(shear)), frequency=frequency)
 
     def change_rotate_to_right_angle(self) -> Affine:
         self.rotate = [0,90,180,270]
@@ -243,10 +243,10 @@ class Affine(BaseMode['Affine']):
         working_dict["scale"]["y"] = tuple( working_dict["scale"]["y"])
         working_dict["translate_percent"]["x"] = tuple( working_dict["translate_percent"]["x"])
         working_dict["translate_percent"]["x"] = tuple( working_dict["translate_percent"]["x"])
-        return Affine(scale = working_dict['scale'], translate_percent= working_dict['translate_percent'], rotate = working_dict['rotate'], order = working_dict['order'], cval=tuple(working_dict['cval']), shear=tuple(working_dict['shear']))
+        return Affine(scale = working_dict['scale'], translate_percent= working_dict['translate_percent'], rotate = working_dict['rotate'], order = working_dict['order'], cval=tuple(working_dict['cval']), shear=tuple(working_dict['shear']), frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Sharpen(BaseMode['Sharpen']):
-    def __init__(self, alpha: list[float]= [0,1.0], lightness:list[float]=[0.75,1.5]):
+    def __init__(self, alpha: list[float]= [0,1.0], lightness:list[float]=[0.75,1.5], frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='alpha',
@@ -263,7 +263,7 @@ class Sharpen(BaseMode['Sharpen']):
         )
         self.alpha = alpha
         self.lightness = lightness
-        super().__init__(aug=iaa.Sharpen(alpha=tuple(alpha), lightness=tuple(lightness)))
+        super().__init__(aug=iaa.Sharpen(alpha=tuple(alpha), lightness=tuple(lightness)), frequency=frequency)
     
     @classmethod
     def from_dict(cls, mode_dict:dict) -> Sharpen:
@@ -276,10 +276,10 @@ class Sharpen(BaseMode['Sharpen']):
             item_dict=working_dict,
             required_keys=['alpha', 'lightness']
         )
-        return Sharpen(alpha=working_dict["alpha"], lightness=working_dict["lightness"])
+        return Sharpen(alpha=working_dict["alpha"], lightness=working_dict["lightness"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Emboss(BaseMode['Emboss']):
-    def __init__(self, alpha:list[float] = [0, 1.0], strength: list[float] = [0, 2.0]):
+    def __init__(self, alpha:list[float] = [0, 1.0], strength: list[float] = [0, 2.0], frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='alpha',
@@ -296,7 +296,7 @@ class Emboss(BaseMode['Emboss']):
         )
         self.strength = strength
         self.alpha = alpha
-        super().__init__(aug=iaa.Emboss(alpha=tuple(alpha), strength=tuple(strength)))
+        super().__init__(aug=iaa.Emboss(alpha=tuple(alpha), strength=tuple(strength)), frequency=frequency)
     
     @classmethod
     def from_dict(cls, mode_dict:dict) -> Emboss:
@@ -309,10 +309,10 @@ class Emboss(BaseMode['Emboss']):
             item_dict=working_dict,
             required_keys=['alpha', 'strength']
         )
-        return Emboss(alpha=working_dict["alpha"], strength=working_dict["strength"])
+        return Emboss(alpha=working_dict["alpha"], strength=working_dict["strength"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class AdditiveGaussianNoise(BaseMode['AdditiveGaussianNoise']):
-    def __init__(self, loc:float = 0, scale: list[float] = [0.0, 12.75], per_channel: float = 0.5):
+    def __init__(self, loc:float = 0, scale: list[float] = [0.0, 12.75], per_channel: float = 0.5, frequency: float = None):
         check_param(
             class_name=self.__class__.__name__,
             param_name='loc',
@@ -337,7 +337,7 @@ class AdditiveGaussianNoise(BaseMode['AdditiveGaussianNoise']):
         self.loc = loc
         self.scale = scale
         self.per_channel = per_channel
-        super().__init__(aug=iaa.AdditiveGaussianNoise(loc=loc, scale=tuple(scale), per_channel=per_channel))
+        super().__init__(aug=iaa.AdditiveGaussianNoise(loc=loc, scale=tuple(scale), per_channel=per_channel), frequency=frequency)
     
     @classmethod
     def from_dict(cls, mode_dict:dict) -> AdditiveGaussianNoise:
@@ -350,10 +350,10 @@ class AdditiveGaussianNoise(BaseMode['AdditiveGaussianNoise']):
             item_dict=working_dict,
             required_keys=['loc', 'scale', 'per_channel']
         )
-        return AdditiveGaussianNoise(loc=working_dict["loc"], scale=working_dict["scale"], per_channel=working_dict["per_channel"])
+        return AdditiveGaussianNoise(loc=working_dict["loc"], scale=working_dict["scale"], per_channel=working_dict["per_channel"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Invert(BaseMode['Invert']):
-    def __init__(self, p:float = 0, per_channel: float = 0.5):
+    def __init__(self, p:float = 0, per_channel: float = 0.5, frequency: float = None):
         check_param(
             class_name=self.__class__.__name__,
             param_name='p',
@@ -370,7 +370,7 @@ class Invert(BaseMode['Invert']):
         )
         self.p = p
         self.per_channel = per_channel
-        super().__init__(aug=iaa.Invert(p=p, per_channel=per_channel))
+        super().__init__(aug=iaa.Invert(p=p, per_channel=per_channel), frequency=frequency)
     
     @classmethod
     def from_dict(cls, mode_dict:dict) -> Invert:
@@ -383,10 +383,10 @@ class Invert(BaseMode['Invert']):
             item_dict=working_dict,
             required_keys=['p', 'per_channel']
         )
-        return Invert(p=working_dict["p"], per_channel=working_dict["per_channel"])
+        return Invert(p=working_dict["p"], per_channel=working_dict["per_channel"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Add(BaseMode['Add']):
-    def __init__(self, value: list[float] = [-20,20], per_channel: float = 0.5):
+    def __init__(self, value: list[float] = [-20,20], per_channel: float = 0.5, frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='value',
@@ -403,7 +403,7 @@ class Add(BaseMode['Add']):
         )
         self.value = value
         self.per_channel = per_channel
-        super().__init__(aug=iaa.Add(value=value, per_channel=per_channel))
+        super().__init__(aug=iaa.Add(value=value, per_channel=per_channel), frequency=frequency)
     
     @classmethod
     def from_dict(cls, mode_dict:dict) -> Add:
@@ -416,10 +416,10 @@ class Add(BaseMode['Add']):
             item_dict=working_dict,
             required_keys=['value', 'per_channel']
         )
-        return Add(value=working_dict["value"], per_channel=working_dict["per_channel"])
+        return Add(value=working_dict["value"], per_channel=working_dict["per_channel"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Multiply(BaseMode['Multiply']):
-    def __init__(self, mul: list[float] = [-20,20], per_channel: float = 0.5):
+    def __init__(self, mul: list[float] = [-20,20], per_channel: float = 0.5, frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='mul',
@@ -436,7 +436,7 @@ class Multiply(BaseMode['Multiply']):
         )
         self.mul = mul
         self.per_channel = per_channel
-        super().__init__(aug=iaa.Multiply(mul= tuple(mul),per_channel=per_channel) )
+        super().__init__(aug=iaa.Multiply(mul= tuple(mul),per_channel=per_channel), frequency=frequency)
     
     @classmethod
     def from_dict(cls, mode_dict:dict) -> Multiply:
@@ -449,10 +449,10 @@ class Multiply(BaseMode['Multiply']):
             item_dict=working_dict,
             required_keys=['mul', 'per_channel']
         )
-        return Multiply(mul=working_dict["mul"], per_channel=working_dict["per_channel"])
+        return Multiply(mul=working_dict["mul"], per_channel=working_dict["per_channel"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class LinearContrast(BaseMode['LinearContrast']):
-    def __init__(self, alpha: list[float] = [0.6,1.4], per_channel: float = 0.5):
+    def __init__(self, alpha: list[float] = [0.6,1.4], per_channel: float = 0.5, frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='alpha',
@@ -469,7 +469,7 @@ class LinearContrast(BaseMode['LinearContrast']):
         )
         self.alpha = alpha
         self.per_channel = per_channel
-        super().__init__(aug=iaa.LinearContrast(alpha=tuple(alpha), per_channel=per_channel))
+        super().__init__(aug=iaa.LinearContrast(alpha=tuple(alpha), per_channel=per_channel), frequency=frequency)
     
     @classmethod
     def from_dict(cls, mode_dict:dict) -> LinearContrast:
@@ -482,10 +482,10 @@ class LinearContrast(BaseMode['LinearContrast']):
             item_dict=working_dict,
             required_keys=['alpha', 'per_channel']
         )
-        return LinearContrast(alpha=working_dict["alpha"], per_channel=working_dict["per_channel"])
+        return LinearContrast(alpha=working_dict["alpha"], per_channel=working_dict["per_channel"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Grayscale(BaseMode['Grayscale']):
-    def __init__(self, alpha: float = 1):
+    def __init__(self, alpha: float = 1, frequency: float = None):
         check_param(
             class_name=self.__class__.__name__,
             param_name='alpha',
@@ -494,7 +494,7 @@ class Grayscale(BaseMode['Grayscale']):
             value=alpha
         )
         self.alpha = alpha
-        super().__init__(aug=iaa.Grayscale(alpha=alpha))
+        super().__init__(aug=iaa.Grayscale(alpha=alpha), frequency=frequency)
     
     @classmethod
     def from_dict(cls, mode_dict:dict) -> LinearContrast:
@@ -507,11 +507,11 @@ class Grayscale(BaseMode['Grayscale']):
             item_dict=working_dict,
             required_keys=['alpha']
         )
-        return Grayscale(alpha=working_dict["alpha"])
+        return Grayscale(alpha=working_dict["alpha"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 
 class ElasticTransformation(BaseMode['ElasticTransformation']):
-    def __init__(self, alpha: list[float] = [0,40.0], sigma: list[float] = [4.0,8.0]):
+    def __init__(self, alpha: list[float] = [0,40.0], sigma: list[float] = [4.0,8.0], frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='alpha',
@@ -528,7 +528,7 @@ class ElasticTransformation(BaseMode['ElasticTransformation']):
         )
         self.alpha = alpha
         self.sigma = sigma
-        super().__init__(aug=iaa.ElasticTransformation(alpha=tuple(alpha), sigma=tuple(sigma)))
+        super().__init__(aug=iaa.ElasticTransformation(alpha=tuple(alpha), sigma=tuple(sigma)), frequency=frequency)
     
     @classmethod
     def from_dict(cls, mode_dict:dict) -> ElasticTransformation:
@@ -541,10 +541,10 @@ class ElasticTransformation(BaseMode['ElasticTransformation']):
             item_dict=working_dict,
             required_keys=['alpha']
         )
-        return ElasticTransformation(alpha=working_dict["alpha"], sigma=working_dict["sigma"])
+        return ElasticTransformation(alpha=working_dict["alpha"], sigma=working_dict["sigma"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class PiecewiseAffine(BaseMode['PiecewiseAffine']):
-    def __init__(self, scale: list[float] = [0,0.05]):
+    def __init__(self, scale: list[float] = [0,0.05], frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='scale',
@@ -553,7 +553,7 @@ class PiecewiseAffine(BaseMode['PiecewiseAffine']):
             value=scale
         )
         self.scale = scale
-        super().__init__(aug=iaa.PiecewiseAffine(scale=tuple(scale)))
+        super().__init__(aug=iaa.PiecewiseAffine(scale=tuple(scale)), frequency=frequency)
     
     @classmethod
     def from_dict(cls, mode_dict:dict) -> PiecewiseAffine:
@@ -566,10 +566,10 @@ class PiecewiseAffine(BaseMode['PiecewiseAffine']):
             item_dict=working_dict,
             required_keys=['scale']
         )
-        return PiecewiseAffine(scale=working_dict["scale"])
+        return PiecewiseAffine(scale=working_dict["scale"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class ContrastNormalization(BaseMode['ContrastNormalization']):
-    def __init__(self, alpha: list[float] = [0.6,1.4], per_channel:float= 0.5):
+    def __init__(self, alpha: list[float] = [0.6,1.4], per_channel:float= 0.5, frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='alpha',
@@ -586,7 +586,7 @@ class ContrastNormalization(BaseMode['ContrastNormalization']):
         )
         self.alpha = alpha
         self.per_channel = per_channel
-        super().__init__(aug=iaa.contrast.LinearContrast(alpha=tuple(alpha), per_channel=per_channel))
+        super().__init__(aug=iaa.contrast.LinearContrast(alpha=tuple(alpha), per_channel=per_channel), frequency=frequency)
     
     @classmethod
     def from_dict(cls, mode_dict:dict) -> ContrastNormalization:
@@ -599,10 +599,10 @@ class ContrastNormalization(BaseMode['ContrastNormalization']):
             item_dict=working_dict,
             required_keys=['alpha', 'per_channel']
         )
-        return ContrastNormalization(alpha=working_dict["alpha"], per_channel=working_dict["per_channel"])
+        return ContrastNormalization(alpha=working_dict["alpha"], per_channel=working_dict["per_channel"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class GaussianBlur(BaseMode['GaussianBlur']):
-    def __init__(self, sigma: list[float] = [0.0,3.0]):
+    def __init__(self, sigma: list[float] = [0.0,3.0], frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='sigma',
@@ -611,7 +611,7 @@ class GaussianBlur(BaseMode['GaussianBlur']):
             value=sigma
         )
         self.sigma = sigma
-        super().__init__(aug=iaa.GaussianBlur(sigma=tuple(sigma)))
+        super().__init__(aug=iaa.GaussianBlur(sigma=tuple(sigma)), frequency=frequency)
     
     @classmethod
     def from_dict(cls, mode_dict:dict) -> GaussianBlur:
@@ -624,10 +624,10 @@ class GaussianBlur(BaseMode['GaussianBlur']):
             item_dict=working_dict,
             required_keys=['sigma']
         )
-        return GaussianBlur(sigma=working_dict["sigma"])
+        return GaussianBlur(sigma=working_dict["sigma"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class AverageBlur(BaseMode['AverageBlur']):
-    def __init__(self, k: list[int] = [1,7]):
+    def __init__(self, k: list[int] = [1,7], frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='k',
@@ -636,7 +636,7 @@ class AverageBlur(BaseMode['AverageBlur']):
             value=k
         )
         self.k = k
-        super().__init__(aug=iaa.AverageBlur(k=tuple(k)))
+        super().__init__(aug=iaa.AverageBlur(k=tuple(k)), frequency=frequency)
     
     @classmethod
     def from_dict(cls, mode_dict:dict) -> AverageBlur:
@@ -649,10 +649,10 @@ class AverageBlur(BaseMode['AverageBlur']):
             item_dict=working_dict,
             required_keys=['k']
         )
-        return AverageBlur(k=working_dict["k"])
+        return AverageBlur(k=working_dict["k"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class MedianBlur(BaseMode['MedianBlur']):
-    def __init__(self, k: list[int] = [1,7]):
+    def __init__(self, k: list[int] = [1,7], frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='k',
@@ -661,7 +661,7 @@ class MedianBlur(BaseMode['MedianBlur']):
             value=k
         )
         self.k = k
-        super().__init__(aug=iaa.MedianBlur(k=tuple(k)))
+        super().__init__(aug=iaa.MedianBlur(k=tuple(k)), frequency=frequency)
     
     @classmethod
     def from_dict(cls, mode_dict:dict) -> MedianBlur:
@@ -674,10 +674,10 @@ class MedianBlur(BaseMode['MedianBlur']):
             item_dict=working_dict,
             required_keys=['k']
         )
-        return MedianBlur(k=working_dict["k"])
+        return MedianBlur(k=working_dict["k"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class MotionBlur(BaseMode['MotionBlur']):
-    def __init__(self, k: list[int] = [3,7], angle: list[float] = [0,360]):
+    def __init__(self, k: list[int] = [3,7], angle: list[float] = [0,360], frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='k',
@@ -694,7 +694,7 @@ class MotionBlur(BaseMode['MotionBlur']):
         )
         self.k = k
         self.angle = angle
-        super().__init__(aug=iaa.MotionBlur(k=tuple(k), angle=tuple(angle)))
+        super().__init__(aug=iaa.MotionBlur(k=tuple(k), angle=tuple(angle)), frequency=frequency)
     
     @classmethod
     def from_dict(cls, mode_dict:dict) -> MotionBlur:
@@ -707,10 +707,10 @@ class MotionBlur(BaseMode['MotionBlur']):
             item_dict=working_dict,
             required_keys=['k', 'angle']
         )
-        return MotionBlur(k=working_dict["k"], angle=working_dict["angle"])
+        return MotionBlur(k=working_dict["k"], angle=working_dict["angle"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class BilateralBlur(BaseMode['BilateralBlur']):
-    def __init__(self, d: list[int] = [1,9], sigma_color: list[float] = [10,250], sigma_space: list[float]=[10,250]):
+    def __init__(self, d: list[int] = [1,9], sigma_color: list[float] = [10,250], sigma_space: list[float]=[10,250], frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='d',
@@ -735,7 +735,7 @@ class BilateralBlur(BaseMode['BilateralBlur']):
         self.d = d
         self.sigma_color = sigma_color
         self.sigma_space = sigma_space
-        super().__init__(aug=iaa.BilateralBlur(d=tuple(d), sigma_color=tuple(sigma_color), sigma_space=tuple(sigma_space)))
+        super().__init__(aug=iaa.BilateralBlur(d=tuple(d), sigma_color=tuple(sigma_color), sigma_space=tuple(sigma_space)), frequency=frequency)
     
     @classmethod
     def from_dict(cls, mode_dict:dict) -> BilateralBlur:
@@ -748,10 +748,10 @@ class BilateralBlur(BaseMode['BilateralBlur']):
             item_dict=working_dict,
             required_keys=['sigma_color', 'd', 'sigma_space']
         )
-        return BilateralBlur(d=working_dict["d"], sigma_color=working_dict["sigma_color"], sigma_space=working_dict["sigma_space"])
+        return BilateralBlur(d=working_dict["d"], sigma_color=working_dict["sigma_color"], sigma_space=working_dict["sigma_space"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class EdgeDetect(BaseMode['EdgeDetect']):
-    def __init__(self, alpha: list[float] = [0,0.75]):
+    def __init__(self, alpha: list[float] = [0,0.75], frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='alpha',
@@ -760,7 +760,7 @@ class EdgeDetect(BaseMode['EdgeDetect']):
             value=alpha
         )
         self.alpha = alpha
-        super().__init__(aug=iaa.EdgeDetect(alpha=tuple(alpha)))
+        super().__init__(aug=iaa.EdgeDetect(alpha=tuple(alpha)), frequency=frequency)
     
     @classmethod
     def from_dict(cls, mode_dict:dict) -> EdgeDetect:
@@ -773,10 +773,10 @@ class EdgeDetect(BaseMode['EdgeDetect']):
             item_dict=working_dict,
             required_keys=['alpha']
         )
-        return EdgeDetect(alpha=working_dict["alpha"])
+        return EdgeDetect(alpha=working_dict["alpha"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class DirectedEdgeDetect(BaseMode['DirectedEdgeDetect']):
-    def __init__(self, alpha: list[float] = [0,0.75], direction: list[float] = [0,1.0]):
+    def __init__(self, alpha: list[float] = [0,0.75], direction: list[float] = [0,1.0], frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='alpha',
@@ -793,7 +793,7 @@ class DirectedEdgeDetect(BaseMode['DirectedEdgeDetect']):
         )
         self.alpha = alpha
         self.direction = direction
-        super().__init__(aug=iaa.DirectedEdgeDetect(alpha=tuple(alpha), direction=tuple(direction)))
+        super().__init__(aug=iaa.DirectedEdgeDetect(alpha=tuple(alpha), direction=tuple(direction)), frequency=frequency)
     
     @classmethod
     def from_dict(cls, mode_dict:dict) -> DirectedEdgeDetect:
@@ -808,10 +808,10 @@ class DirectedEdgeDetect(BaseMode['DirectedEdgeDetect']):
             # required_keys=list(cls().__dict__.keys())[:-2]
             required_keys=["alpha", "direction"]
         )
-        return DirectedEdgeDetect(alpha=working_dict["alpha"])
+        return DirectedEdgeDetect(alpha=working_dict["alpha"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Dropout(BaseMode['Dropout']):
-    def __init__(self, p: list[float] = [0,0.05], per_channel = 0.5):
+    def __init__(self, p: list[float] = [0,0.05], per_channel = 0.5, frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='p',
@@ -828,7 +828,7 @@ class Dropout(BaseMode['Dropout']):
         )
         self.p = p
         self.per_channel = per_channel
-        super().__init__(aug=iaa.Dropout(p=tuple(p), per_channel=per_channel))
+        super().__init__(aug=iaa.Dropout(p=tuple(p), per_channel=per_channel), frequency=frequency)
     
     @classmethod
     def from_dict(cls, mode_dict:dict) -> Dropout:
@@ -841,10 +841,10 @@ class Dropout(BaseMode['Dropout']):
             item_dict=working_dict,
             required_keys=["p", "per_channel"]
         )
-        return Dropout(p=working_dict["p"], per_channel=working_dict["per_channel"])
+        return Dropout(p=working_dict["p"], per_channel=working_dict["per_channel"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class CoarseDropout(BaseMode['CoarseDropout']):
-    def __init__(self, p: list[float] = [0,0.05]):
+    def __init__(self, p: list[float] = [0,0.05], frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='p',
@@ -853,7 +853,7 @@ class CoarseDropout(BaseMode['CoarseDropout']):
             value=p
         )
         self.p = p
-        super().__init__(aug=iaa.CoarseDropout(p=tuple(p)))
+        super().__init__(aug=iaa.CoarseDropout(p=tuple(p)), frequency=frequency)
     
     @classmethod
     def from_dict(cls, mode_dict:dict) -> CoarseDropout:
@@ -866,22 +866,26 @@ class CoarseDropout(BaseMode['CoarseDropout']):
             item_dict=working_dict,
             required_keys=["p"]
         )
-        return CoarseDropout(p=working_dict["p"])
+        return CoarseDropout(p=working_dict["p"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class AugHandler(BaseModeHandler['AugHandler', 'Any']):
-    def __init__(self, aug_modes: list=None):
-        super().__init__(
-            obj_types=[
+    def __init__(self, aug_modes: list=None, random_order: bool = False):
+        obj_types= [
                 Fliplr, Flipud, Resize, Crop, Superpixels,
                 Affine, Sharpen, Emboss, AdditiveGaussianNoise, Invert,
                 Add, Multiply, LinearContrast, Grayscale, ElasticTransformation,
                 PiecewiseAffine, ContrastNormalization, GaussianBlur, AverageBlur, MedianBlur,
                 MotionBlur, BilateralBlur, EdgeDetect, DirectedEdgeDetect, Dropout,
                 CoarseDropout
-            ],
-            obj_list=aug_modes
+            ]
+        super().__init__(
+            obj_types=obj_types,
+            obj_list=aug_modes,
+            random_order=random_order
         )
-        self.aug_modes = self.obj_list
+        self.aug_modes = [iaa.Sometimes(obj.frequency ,obj.aug) if obj.frequency is not None else obj.aug for obj in self.obj_list]
+        self.random_order = random_order
+        print(self.random_order)
 
     def __call__(self, *args, **kwargs):
 
@@ -914,7 +918,7 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                     imgaug_bboxes.bounding_boxes.append(item.to_imgaug())
                 kwargs["bounding_boxes"] = imgaug_bboxes
 
-        seq = iaa.Sequential([aug_mode.aug for aug_mode in self.aug_modes])
+        seq = iaa.Sequential([aug_mode for aug_mode in self.aug_modes], random_order=self.random_order)
         a = seq(*args, **kwargs)
         image = a[0]
 
@@ -965,8 +969,8 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
 
         return a
 
-    @classmethod
-    def from_dict_list(cls, dict_list: List[dict]) -> AugHandler:
+    def append_aug_modes(self, dict_list: List[dict]) -> []:
+
         aug_modes = []
         for dict_item in dict_list:
             if dict_item['class_name'] == 'Fliplr':
@@ -1024,6 +1028,13 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
             else:
                 logger.error(f"Invalid class_name: {dict_item['class_name']}")
                 raise Exception
+
+        return aug_modes
+
+    @classmethod
+    def from_dict_list(cls, dict_list: List[dict]) -> AugHandler:
+
+        aug_modes = cls.append_aug_modes(self = cls, dict_list = [dict_base for dict_base in dict_list])
 
         return AugHandler(aug_modes=aug_modes)
 

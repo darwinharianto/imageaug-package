@@ -21,9 +21,10 @@ class BaseModeMeta(type):
         return super().__new__(cls,name,bases,body)
 
 class BaseMode(Generic[T], metaclass= BaseModeMeta):
-    def __init__(self, aug: iaa.Augmenter):
+    def __init__(self, aug: iaa.Augmenter, frequency: float = None):
         self.aug = aug
         self.class_name = self.__class__.__name__
+        self.frequency = frequency
         
     # sample to raise error when init subclass
     def __init_subclass__(self, *a, **kw):
@@ -44,7 +45,7 @@ class BaseMode(Generic[T], metaclass= BaseModeMeta):
         return f'{self.class_name}({param_str})'
     
     def __repr__(self: T) -> str:
-        return self.__str__(self)
+        return self.__str__()
 
     def __call__(self: T, *args, **kwargs):
         return self.aug(*args, **kwargs)
@@ -62,6 +63,8 @@ class BaseMode(Generic[T], metaclass= BaseModeMeta):
     def to_dict(self: T) -> dict:
         result = self._get_param_dict()
         result['class_name'] = self.class_name
+        if result['frequency'] == None:
+            del result['frequency']
         return result
 
     def save_to_path(self: T, save_path: str, overwrite: bool=False):
@@ -89,13 +92,14 @@ class BaseMode(Generic[T], metaclass= BaseModeMeta):
         return cls.from_dict(json_dict)
 
 class BaseModeHandler(Generic[H, T]):
-    def __init__(self: H, obj_types: List[type], obj_list: List[T]=None):
+    def __init__(self: H, obj_types: List[type], obj_list: List[T]=None, random_order: bool = False):
         check_type(obj_types, valid_type_list=[list])
         check_type_from_list(obj_types, valid_type_list=[type, BaseModeMeta])
         self.obj_types = obj_types
         if obj_list is not None:
             check_type_from_list(obj_list, valid_type_list=obj_types)
         self.obj_list = obj_list if obj_list is not None else []
+        self.random_order = random_order
 
     def __str__(self: H):
         print_str = ""

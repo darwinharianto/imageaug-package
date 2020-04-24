@@ -1,0 +1,244 @@
+[
+  {
+    "scale": {
+      "x": [
+        0.8,
+        1.2
+      ],
+      "y": [
+        0.8,
+        1.2
+      ]
+    },
+    "translate_percent": {
+      "x": [
+        0.1,
+        0.11
+      ],
+      "y": [
+        0.1,
+        0.11
+      ]
+    },
+    "rotate": [
+      -180,
+      180
+    ],
+    "order": [
+      0,
+      0
+    ],
+    "cval": [
+      0,
+      0
+    ],
+    "shear": [
+      0,
+      0
+    ],
+    "class_name": "Affine"
+  },
+  {
+    "percent": [
+      0.2,
+      0.5
+    ],
+    "class_name": "Crop"
+  },
+  {
+    "p": 0.5,
+    "class_name": "Flipud"
+  },
+  {
+    "p_replace": [
+      0,
+      1.0
+    ],
+    "n_segments": [
+      20,
+      200
+    ],
+    "class_name": "Superpixels"
+  },
+  {
+    "alpha": [
+      0,
+      0.1
+    ],
+    "lightness": [
+      0.8,
+      1
+    ],
+    "class_name": "Sharpen"
+  },
+  {
+    "strength": [
+      0.8,
+      1
+    ],
+    "alpha": [
+      0,
+      0.1
+    ],
+    "class_name": "Emboss"
+  },
+  {
+    "loc": 0,
+    "scale": [
+      0.0,
+      12.75
+    ],
+    "per_channel": 0.5,
+    "class_name": "AdditiveGaussianNoise"
+  },
+  {
+    "p": 1,
+    "per_channel": false,
+    "class_name": "Invert"
+  },
+  {
+    "value": [
+      -20,
+      20
+    ],
+    "per_channel": true,
+    "class_name": "Add"
+  },
+  {
+    "alpha": [
+      0.6,
+      1.4
+    ],
+    "per_channel": true,
+    "class_name": "LinearContrast"
+  },
+  {
+    "alpha": 0.8,
+    "class_name": "Grayscale"
+  },
+  {
+    "mul": [
+      0.8,
+      1.2
+    ],
+    "per_channel": false,
+    "class_name": "Multiply"
+  },
+  {
+    "alpha": [
+      0,
+      40
+    ],
+    "sigma": [
+      4,
+      6
+    ],
+    "class_name": "ElasticTransformation"
+  },
+  {
+    "scale": [
+      0.0,
+      0.05
+    ],
+    "class_name": "PiecewiseAffine"
+  },
+  {
+    "alpha": [
+      0.7,
+      1
+    ],
+    "per_channel": true,
+    "class_name": "ContrastNormalization"
+  },
+  {
+    "k": [
+      1,
+      7
+    ],
+    "class_name": "AverageBlur"
+  },
+  {
+    "k": [
+      3,
+      7
+    ],
+    "angle": [
+      0,
+      360
+    ],
+    "class_name": "MotionBlur"
+  },
+  {
+    "d": [
+      1,
+      9
+    ],
+    "sigma_color": [
+      10,
+      250
+    ],
+    "sigma_space": [
+      10,
+      250
+    ],
+    "class_name": "BilateralBlur"
+  },
+  {
+    "alpha": [
+      0,
+      0.5
+    ],
+    "class_name": "EdgeDetect"
+  },
+  {
+    "alpha": [
+      0,
+      0.5
+    ],
+    "direction": [
+      0,
+      1
+    ],
+    "class_name": "DirectedEdgeDetect"
+  },
+  {
+    "p": [
+      0,
+      0.05
+    ],
+    "per_channel": false,
+    "class_name": "Dropout"
+  },
+  {
+    "p": [
+      0,
+      0.5
+    ],
+    "class_name": "CoarseDropout"
+  },
+  {
+    "width": 900,
+    "height": 900,
+    "class_name": "Resize"
+  },
+  {
+    "alpha": 0.9,
+    "frequency": 0.8,
+    "class_name": "Grayscale"
+  },
+  {
+    "d": [
+      1,
+      2
+    ],
+    "sigma_color": [
+      10,
+      250
+    ],
+    "sigma_space": [
+      10,
+      250
+    ],
+    "class_name": "BilateralBlur"
+  }
+]
