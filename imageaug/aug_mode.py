@@ -885,7 +885,6 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
         )
         self.aug_modes = [iaa.Sometimes(obj.frequency ,obj.aug) if obj.frequency is not None else obj.aug for obj in self.obj_list]
         self.random_order = random_order
-        print(self.random_order)
 
     def __call__(self, *args, **kwargs):
 
