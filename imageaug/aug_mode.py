@@ -888,6 +888,71 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
 
     def __call__(self, *args, **kwargs):
 
+        if "dataset_dict_detectron" in kwargs:
+            from detectron2.structures import BoxMode
+            dataset_dict = kwargs["dataset_dict_detectron"]
+
+            image = kwargs["image"]
+            keypoints = []
+            bbox = []
+            segmentation = []
+            ann_instance = 0
+
+            for item in dataset_dict["annotations"]:
+                ann_instance += 1
+                if "keypoints" in item:
+                    item["keypoints"] = Keypoint2D_List.from_numpy(np.array(item["keypoints"]))
+                    keypoints_num = len(item["keypoints"])
+                    keypoints.append(item["keypoints"])
+
+                if "segmentation" in item:
+                    item["segmentation"] = Segmentation.from_list(item["segmentation"])
+                    segmentation.append(item["segmentation"])
+                if "bbox" in item:
+                    item["bbox"] = BBox(xmin=item["bbox"][0], xmax=item["bbox"][0]+item["bbox"][2], ymin=item["bbox"][1], ymax=item["bbox"][1]+item["bbox"][3])
+                    bbox.append(item["bbox"])
+                    item["bbox_mode"] = BoxMode.XYXY_ABS
+            
+
+            if len(keypoints) != 0 and len(bbox) != 0 and len(segmentation) != 0:
+                image, keypoints, bbox, poly = self.perform_aug_modes(image=image, keypoints= keypoints, bounding_boxes=bbox, polygons=segmentation)
+            elif len(keypoints) != 0 and len(bbox) != 0 and len(segmentation) == 0:
+                image, keypoints, bbox = self.perform_aug_modes(image=image, keypoints= keypoints, bounding_boxes=bbox)
+            elif len(keypoints) != 0 and len(bbox) == 0 and len(segmentation) != 0:
+                image, keypoints, poly = self.perform_aug_modes(image=image, keypoints= keypoints, polygons=segmentation)
+            elif len(keypoints) != 0 and len(bbox) == 0 and len(segmentation) == 0:
+                image, keypoints = self.perform_aug_modes(image=image, keypoints= keypoints)
+            elif len(keypoints) == 0 and len(bbox) != 0 and len(segmentation) != 0:
+                image, bbox, poly = self.perform_aug_modes(image=image, bounding_boxes=bbox, polygons=segmentation)
+            elif len(keypoints) == 0 and len(bbox) != 0 and len(segmentation) == 0:
+                image, bbox = self.perform_aug_modes(image=image, bounding_boxes=bbox)
+            elif len(keypoints) == 0 and len(bbox) == 0 and len(segmentation) != 0:
+                image, poly = self.perform_aug_modes(image=image, polygons=segmentation)
+            
+            if "keypoints" in locals() and len(keypoints) != 0:
+                kpts_aug_list = keypoints[0].to_numpy(demarcation=True)[:, :2].reshape(ann_instance, keypoints_num, 2)
+                kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
+                keypoints = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
+
+            for i in range(len(dataset_dict["annotations"])):
+                if "keypoints" in dataset_dict["annotations"][i]:
+                    dataset_dict["annotations"][i]["keypoints"] = np.asarray(keypoints[i].to_list(), dtype="float64").reshape(-1,3)
+                if "bbox" in dataset_dict["annotations"][i]:
+                    dataset_dict["annotations"][i]["bbox"] = bbox[i].to_list()
+                if "segmentation" in dataset_dict["annotations"][i]:
+                    dataset_dict["annotations"][i]["segmentation"] = [poly[i].to_list()]
+            
+
+
+            return image, dataset_dict
+        else:
+
+            a = self.perform_aug_modes(*args, **kwargs)
+
+        return a
+    
+    def perform_aug_modes(self, *args, **kwargs):
+
         if "polygons" not in kwargs:
             logger.red("polygons not found. Only rotate 90, 180, 270, 360")
             for i in range(len(self.aug_modes)) :
@@ -959,7 +1024,6 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
         if 'bbox_aug_list_from_poly' in locals():
             if 'bbox_aug_list' in locals():
                 bbox_aug_list = bbox_aug_list_from_poly
-
         if 'poly_aug_list' in locals():
             a = (image, bbox_aug_list, poly_aug_list)
             if 'kpts_aug_list' in locals():
@@ -970,6 +1034,7 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                 a = (image, kpts_aug_list, bbox_aug_list)
 
         return a
+
 
     def append_aug_modes(self, dict_list: List[dict]) -> []:
 

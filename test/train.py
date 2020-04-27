@@ -45,6 +45,30 @@ from common_utils.file_utils import file_exists
 from imageaug import AugHandler, Augmenter as aug
 
 
+
+class Test_Keypoint_Trainer(DefaultTrainer):
+    def __init__(self, cfg):
+        super().__init__(cfg=cfg)
+        self.predictor = DefaultPredictor(cfg)
+
+    @classmethod
+    def build_train_loader(cls, cfg):
+        return build_detection_train_loader(cfg=cfg, mapper=mapper)
+
+def load_augmentation_settings(handler_save_path: str):
+
+    if not file_exists(handler_save_path):
+        handler = AugHandler(
+            [
+                aug.Crop(percent=[0.2, 0.5]),
+            ]
+        )
+        handler.save_to_path(save_path=handler_save_path, overwrite=True)
+    else:
+        handler = AugHandler.load_from_path(handler_save_path)
+
+    return handler
+
 def make_config_file_from_datasets(datasets_dict: {}, config_path: str):
     handler = DatasetConfigCollectionHandler()
 
@@ -151,98 +175,18 @@ def setup_config_file(instance_name:str, cfg):
     return cfg
 
 
-
-
-def load_settings(handler_save_path: str):
-
-    if not file_exists(handler_save_path):
-        handler = AugHandler(
-            [
-                aug.Crop(percent=[0.2, 0.5]),
-            ]
-        )
-        handler.save_to_path(save_path=handler_save_path, overwrite=True)
-    else:
-        handler = AugHandler.load_from_path(handler_save_path)
-
-    return handler
-
-def perform_augmentation(dataset_dict, handler: AugHandler):
-
-    image = utils.read_image(dataset_dict["file_name"], format="BGR")
-
-    keypoints = []
-    bbox = []
-    segmentation = []
-    ann_instance = 0
-
-    for item in dataset_dict["annotations"]:
-        ann_instance += 1
-        if "keypoints" in item:
-            item["keypoints"] = Keypoint2D_List.from_numpy(np.array(item["keypoints"]))
-            keypoints_num = len(item["keypoints"])
-            keypoints.append(item["keypoints"])
-
-        if "segmentation" in item:
-            item["segmentation"] = Segmentation.from_list(item["segmentation"])
-            segmentation.append(item["segmentation"])
-        if "bbox" in item:
-            item["bbox"] = BBox(xmin=item["bbox"][0], xmax=item["bbox"][0]+item["bbox"][2], ymin=item["bbox"][1], ymax=item["bbox"][1]+item["bbox"][3])
-            bbox.append(item["bbox"])
-            item["bbox_mode"] = BoxMode.XYXY_ABS
-
-    if len(keypoints) != 0 and len(bbox) != 0 and len(segmentation) != 0:
-        image, keypoints, bbox, poly = handler(image=image, keypoints= keypoints, bounding_boxes=bbox, polygons=segmentation)
-        kpts_aug_list = keypoints[0].to_numpy(demarcation=True)[:, :2].reshape(ann_instance, keypoints_num, 2)
-        kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
-        keypoints = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
-    elif len(keypoints) == 0 and len(bbox) != 0 and len(segmentation) != 0:
-        image,  bbox, poly = handler(image=image, bounding_boxes=bbox, polygons=segmentation)
-    elif len(keypoints) != 0 and len(bbox) != 0 and len(segmentation) == 0:
-        image, keypoints, bbox = handler(image=image, keypoints= keypoints, bounding_boxes=bbox)
-        kpts_aug_list = keypoints[0].to_numpy(demarcation=True)[:, :2].reshape(ann_instance, keypoints_num, 2)
-        kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
-        keypoints = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
-    elif len(keypoints) != 0 and len(bbox) == 0 and len(segmentation) != 0:
-        image, keypoints, poly = handler(image=image, keypoints= keypoints, polygons=segmentation)
-        kpts_aug_list = keypoints[0].to_numpy(demarcation=True)[:, :2].reshape(ann_instance, keypoints_num, 2)
-        kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
-        keypoints = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
-    elif len(keypoints) != 0 and len(bbox) == 0 and len(segmentation) == 0:
-        image, keypoints = handler(image=image, keypoints= keypoints)
-        kpts_aug_list = keypoints[0].to_numpy(demarcation=True)[:, :2].reshape(ann_instance, keypoints_num, 2)
-        kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
-        keypoints = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
-    elif len(keypoints) == 0 and len(bbox) != 0 and len(segmentation) == 0:
-        image, bbox = handler(image=image, bounding_boxes=bbox)
-    elif len(keypoints) == 0 and len(bbox) == 0 and len(segmentation) != 0:
-        image, poly = handler(image=image, polygons=segmentation)
-
-    annots = []
-
-    for i in range(len(dataset_dict["annotations"])):
-        item = dataset_dict["annotations"][i]
-        if "keypoints" in item:
-            item["keypoints"] = np.asarray(keypoints[i].to_list(), dtype="float64").reshape(-1,3)
-        if "bbox" in item:
-            item["bbox"] = bbox[i].to_list()
-        if "segmentation" in item:
-            item["segmentation"] = [poly[i].to_list()]
-        annots.append(item)
-        
-
-    return image, annots
-
-
-    
-
 def mapper(dataset_dict):
     # Implement a mapper, similar to the default DatasetMapper, but with your own customizations
     dataset_dict = copy.deepcopy(dataset_dict)  # it will be modified by code below
     image = utils.read_image(dataset_dict["file_name"], format="BGR")
 
-    handler = load_settings(handler_save_path = 'test_handler.json')
-    image, annots = perform_augmentation(dataset_dict=dataset_dict, handler=handler)
+    handler = load_augmentation_settings(handler_save_path = 'test_handler.json')   
+    image, dataset_dict = handler(image=image, dataset_dict_detectron=dataset_dict)
+    
+    annots = []
+
+    for item in dataset_dict["annotations"]:
+        annots.append(item)
 
     dataset_dict["image"] = torch.as_tensor(image.transpose(2, 0, 1).astype("float32"))
     instances = utils.annotations_to_instances(annots, image.shape[:2])
@@ -251,14 +195,6 @@ def mapper(dataset_dict):
     return dataset_dict
 
 
-class Test_Keypoint_Trainer(DefaultTrainer):
-    def __init__(self, cfg):
-        super().__init__(cfg=cfg)
-        self.predictor = DefaultPredictor(cfg)
-
-    @classmethod
-    def build_train_loader(cls, cfg):
-        return build_detection_train_loader(cfg=cfg, mapper=mapper)
 
 if __name__ == "__main__":
 
