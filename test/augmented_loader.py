@@ -54,9 +54,9 @@ def perform_augmentation(dataset_dict, handler: AugHandler):
             keypoints_num = len(item["keypoints"])
             keypoints.append(item["keypoints"])
 
-        # if "segmentation" in item:
-        #     item["segmentation"] = Segmentation.from_list(item["segmentation"])
-        #     segmentation.append(item["segmentation"])
+        if "segmentation" in item:
+            item["segmentation"] = Segmentation.from_list(item["segmentation"])
+            segmentation.append(item["segmentation"])
         if "bbox" in item:
             item["bbox"] = BBox(xmin=item["bbox"][0], xmax=item["bbox"][0]+item["bbox"][2], ymin=item["bbox"][1], ymax=item["bbox"][1]+item["bbox"][3])
             bbox.append(item["bbox"])
@@ -97,8 +97,8 @@ def perform_augmentation(dataset_dict, handler: AugHandler):
             item["keypoints"] = np.asarray(keypoints[i].to_list(), dtype="float64").reshape(-1,3)
         if "bbox" in item:
             item["bbox"] = bbox[i].to_list()
-        # if "segmentation" in item:
-        #     item["segmentation"] = [poly[i].to_list()]
+        if "segmentation" in item:
+            item["segmentation"] = [poly[i].to_list()]
         annots.append(item)
         
     del dataset_dict["annotations"]
