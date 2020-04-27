@@ -1,34 +1,18 @@
 [
   {
-    "scale": [
-      0.0,
-      0.05
+    "alpha": [
+      0,
+      40
     ],
-    "class_name": "PiecewiseAffine"
+    "sigma": [
+      4,
+      6
+    ],
+    "class_name": "ElasticTransformation"
   },
   {
     "width": 900,
     "height": 900,
     "class_name": "Resize"
-  },
-  {
-    "alpha": 0.9,
-    "frequency": 0.1,
-    "class_name": "Grayscale"
-  },
-  {
-    "d": [
-      1,
-      2
-    ],
-    "sigma_color": [
-      10,
-      250
-    ],
-    "sigma_space": [
-      10,
-      250
-    ],
-    "class_name": "BilateralBlur"
   }
 ]

@@ -251,10 +251,10 @@ def mapper(dataset_dict):
         vis = draw_bbox(img=vis, bbox=bbox)
         vis_kpts = annot['keypoints'][:, :2]
         vis = draw_keypoints(img=vis, keypoints=vis_kpts)
-        seg = Segmentation.from_list(annot['segmentation'], demarcation=False)
-        vis = draw_segmentation(img=vis, segmentation=seg, transparent=True)
+        if 'segmentation' in annot:
+            seg = Segmentation.from_list(annot['segmentation'], demarcation=False)
+            vis = draw_segmentation(img=vis, segmentation=seg, transparent=True)
     aug_visualizer.step(vis)
-    logger.cyan(annots)
 
     dataset_dict["image"] = torch.as_tensor(image.transpose(2, 0, 1).astype("float32"))
     instances = utils.annotations_to_instances(annots, image.shape[:2])
@@ -276,8 +276,8 @@ if __name__ == "__main__":
 
     instance_name = "measure"
     # config_path = "scratch_config.yaml"
-    dest_folder_img_combined = "/home/clayton/workspace/prj/data_keep/data/toyota/dataset/sim/20200228/28_02_2020_11_18_30_coco-data"
-    dest_json_file_combined = "/home/clayton/workspace/prj/data_keep/data/toyota/dataset/sim/20200228/28_02_2020_11_18_30_coco-data/HSR-coco.json"
+    dest_folder_img_combined = "/home/clayton/workspace/prj/data_keep/data/toyota/dataset/real/phone_videos/new/sampled_data/VID_20200217_161043/img"
+    dest_json_file_combined = "/home/clayton/workspace/prj/data_keep/data/toyota/dataset/real/phone_videos/new/sampled_data/VID_20200217_161043/coco/output.json"
 
     # instance_name = "hsr"
     # dest_folder_img_combined = "./dummy_data/18_03_2020_18_03_10_coco-data"
