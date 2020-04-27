@@ -919,7 +919,6 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
 
         seq = iaa.Sequential([iaa.Sometimes(aug_modes.frequency ,aug_modes.aug) if aug_modes.frequency is not None else aug_modes.aug for aug_modes in self.aug_modes], random_order=self.random_order)
         a = seq(*args, **kwargs)
-        image = a[0]
 
         for items in a:
             if isinstance(items, KeypointsOnImage):
@@ -927,9 +926,11 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                 kpts_aug_list = kpts_aug0.to_numpy(demarcation=True)[:, :2].reshape(1, len(kpts_aug0), 2)
                 kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
                 kpts_aug_list = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
-            if isinstance(items, BoundingBoxesOnImage):
+            elif isinstance(items, BoundingBoxesOnImage):
+                items.remove_out_of_image().clip_out_of_image()
                 bbox_aug_list = [BBox.from_imgaug(bbox_aug) for bbox_aug in items.bounding_boxes]
-            if isinstance(items, PolygonsOnImage):
+            elif isinstance(items, PolygonsOnImage):
+                items.remove_out_of_image().clip_out_of_image()
                 poly_aug_list = [Polygon.from_imgaug(imgaug_polygon) for imgaug_polygon in items.polygons]
                 bbox_aug_list_from_poly = [poly_aug.to_bbox() for poly_aug in poly_aug_list]
                 # Adjust BBoxes when Segmentation BBox does not contain all keypoints
@@ -952,6 +953,8 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                 #         break
 
                 seg_aug_list = [Segmentation([poly_aug]) for poly_aug in poly_aug_list]
+            else:
+                image = items
 
         if 'bbox_aug_list_from_poly' in locals():
             if 'bbox_aug_list' in locals():
