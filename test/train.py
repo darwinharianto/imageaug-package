@@ -1,7 +1,7 @@
 # save dataset configuration to config file
 
-from annotation_utils.coco.refactored.structs import COCO_Dataset
-from annotation_utils.dataset.refactored.config.dataset_config import \
+from annotation_utils.coco.structs import COCO_Dataset
+from annotation_utils.dataset.config.dataset_config import \
     DatasetConfigCollectionHandler, DatasetConfigCollection, DatasetConfig
 from pasonatron.detectron2.util.dataset_parser import Detectron2_Annotation_Dict
 from detectron2.data import DatasetCatalog, MetadataCatalog
@@ -17,7 +17,7 @@ from detectron2 import model_zoo
 from detectron2.engine import DefaultTrainer
 
 from logger import logger
-from annotation_utils.coco.refactored.structs import COCO_Dataset
+from annotation_utils.coco.structs import COCO_Dataset
 from common_utils.file_utils import file_exists
 
 from pasonatron.detectron2.lib.roi_heads import CustomROIHeads, ROI_HEADS_REGISTRY
@@ -43,6 +43,7 @@ from common_utils.common_types.bbox import BBox
 from common_utils.common_types.segmentation import Segmentation, Polygon
 from common_utils.file_utils import file_exists
 from imageaug import AugHandler, Augmenter as aug
+from pasonatron.detectron2.util.augmentation.aug_visualizer import aug_visualizer
 
 
 def make_config_file_from_datasets(datasets_dict: {}, config_path: str):
@@ -90,33 +91,33 @@ def register_dataset_to_detectron(instance_name: str,img_dir_path: str, ann_path
         json_file=ann_path,
         image_root=img_dir_path
     )
-    MetadataCatalog.get(instance_name).thing_classes = ['Measure', 'numbers']
+    # MetadataCatalog.get(instance_name).thing_classes = ['Measure', 'numbers']
 
-    # MetadataCatalog.get(instance_name).thing_classes = ['hsr']
-    # MetadataCatalog.get(instance_name).keypoint_names = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
-    # MetadataCatalog.get(instance_name).keypoint_flip_map = []
-    # MetadataCatalog.get(instance_name).keypoint_connection_rules = [
-    #     ('A', 'B', (0, 0, 255)),
-    #     ('B', 'C', (0, 0, 255)),
-    #     ('C', 'D', (0, 0, 255)),
-    #     ('D', 'A', (0, 0, 255)),
-    #     ('A', 'E', (0, 0, 255)),
-    #     ('B', 'F', (0, 0, 255)),
-    #     ('C', 'G', (0, 0, 255)),
-    #     ('D', 'H', (0, 0, 255)),
-    #     ('E', 'F', (0, 0, 255)),
-    #     ('F', 'G', (0, 0, 255)),
-    #     ('G', 'H', (0, 0, 255)),
-    #     ('H', 'E', (0, 0, 255)),
-    #     ('E', 'I', (0, 0, 255)),
-    #     ('F', 'J', (0, 0, 255)),
-    #     ('G', 'K', (0, 0, 255)),
-    #     ('H', 'L', (0, 0, 255)),
-    #     ('I', 'J', (0, 0, 255)),
-    #     ('J', 'K', (0, 0, 255)),
-    #     ('K', 'L', (0, 0, 255)),
-    #     ('L', 'I', (0, 0, 255))
-    # ]
+    MetadataCatalog.get(instance_name).thing_classes = ['hsr']
+    MetadataCatalog.get(instance_name).keypoint_names = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
+    MetadataCatalog.get(instance_name).keypoint_flip_map = []
+    MetadataCatalog.get(instance_name).keypoint_connection_rules = [
+        ('A', 'B', (0, 0, 255)),
+        ('B', 'C', (0, 0, 255)),
+        ('C', 'D', (0, 0, 255)),
+        ('D', 'A', (0, 0, 255)),
+        ('A', 'E', (0, 0, 255)),
+        ('B', 'F', (0, 0, 255)),
+        ('C', 'G', (0, 0, 255)),
+        ('D', 'H', (0, 0, 255)),
+        ('E', 'F', (0, 0, 255)),
+        ('F', 'G', (0, 0, 255)),
+        ('G', 'H', (0, 0, 255)),
+        ('H', 'E', (0, 0, 255)),
+        ('E', 'I', (0, 0, 255)),
+        ('F', 'J', (0, 0, 255)),
+        ('G', 'K', (0, 0, 255)),
+        ('H', 'L', (0, 0, 255)),
+        ('I', 'J', (0, 0, 255)),
+        ('J', 'K', (0, 0, 255)),
+        ('K', 'L', (0, 0, 255)),
+        ('L', 'I', (0, 0, 255))
+    ]
 
 def setup_config_file(instance_name:str, cfg):
 
@@ -134,11 +135,11 @@ def setup_config_file(instance_name:str, cfg):
     # cfg.MODEL.ROI_KEYPOINT_HEAD.NUM_KEYPOINTS = 12
     # cfg.INPUT.MIN_SIZE_TRAIN = 512
 
-    cfg.merge_from_file(model_zoo.get_config_file("COCO-Detection/faster_rcnn_X_101_32x8d_FPN_3x.yaml"))
+    cfg.merge_from_file(model_zoo.get_config_file("COCO-Detection/faster_rcnn_R_50_C4_1x.yaml"))
     cfg.DATASETS.TRAIN = (instance_name,)
     cfg.DATASETS.TEST = (instance_name,)  # no metrics implemented for this dataset
     cfg.DATALOADER.NUM_WORKERS = 2
-    cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-Detection/faster_rcnn_X_101_32x8d_FPN_3x.yaml")  # initialize from model zoo
+    cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-Detection/faster_rcnn_R_50_C4_1x.yaml")  # initialize from model zoo
     cfg.SOLVER.IMS_PER_BATCH = 2
     cfg.SOLVER.BASE_LR = 0.015
     cfg.SOLVER.MAX_ITER = (
@@ -234,7 +235,8 @@ def perform_augmentation(dataset_dict, handler: AugHandler):
     return image, annots
 
 
-    
+from common_utils.common_types.bbox import BBox
+from common_utils.common_types.segmentation import Segmentation
 
 def mapper(dataset_dict):
     # Implement a mapper, similar to the default DatasetMapper, but with your own customizations
@@ -243,6 +245,16 @@ def mapper(dataset_dict):
 
     handler = load_settings(handler_save_path = 'test_handler.json')
     image, annots = perform_augmentation(dataset_dict=dataset_dict, handler=handler)
+    vis = image.copy()
+    for annot in annots:
+        bbox = BBox.from_list(annot['bbox'], input_format='pminpmax')
+        vis = draw_bbox(img=vis, bbox=bbox)
+        vis_kpts = annot['keypoints'][:, :2]
+        vis = draw_keypoints(img=vis, keypoints=vis_kpts)
+        seg = Segmentation.from_list(annot['segmentation'], demarcation=False)
+        vis = draw_segmentation(img=vis, segmentation=seg, transparent=True)
+    aug_visualizer.step(vis)
+    logger.cyan(annots)
 
     dataset_dict["image"] = torch.as_tensor(image.transpose(2, 0, 1).astype("float32"))
     instances = utils.annotations_to_instances(annots, image.shape[:2])
@@ -264,8 +276,8 @@ if __name__ == "__main__":
 
     instance_name = "measure"
     # config_path = "scratch_config.yaml"
-    dest_folder_img_combined = "../../../coco_data_measure_random_color"
-    dest_json_file_combined = "../../../coco_data_measure_random_color/HSR-coco.json"
+    dest_folder_img_combined = "/home/clayton/workspace/prj/data_keep/data/toyota/dataset/sim/20200228/28_02_2020_11_18_30_coco-data"
+    dest_json_file_combined = "/home/clayton/workspace/prj/data_keep/data/toyota/dataset/sim/20200228/28_02_2020_11_18_30_coco-data/HSR-coco.json"
 
     # instance_name = "hsr"
     # dest_folder_img_combined = "./dummy_data/18_03_2020_18_03_10_coco-data"
