@@ -50,8 +50,8 @@ else:
             # aug.LinearContrast(alpha=[0.6,1.4], per_channel=True),
             # aug.Grayscale(alpha=0.8),
             # aug.Multiply(mul=[0.8,1.2], per_channel=False),
-            # aug.ElasticTransformation(alpha=[0,40], sigma=[4,6]),
-            aug.PiecewiseAffine(scale=[0.0,0.05]),
+            aug.ElasticTransformation(alpha=[0,40], sigma=[4,6]),
+            # aug.PiecewiseAffine(scale=[0.0,0.05]),
             # aug.ContrastNormalization(alpha=[0.7,1], per_channel=True),
             # aug.AverageBlur(k=[1,7]),
             # aug.MotionBlur(k=[3,7], angle=[0,360]),
@@ -61,8 +61,8 @@ else:
             # aug.Dropout(p=[0,0.05], per_channel=False),
             # aug.CoarseDropout(p=[0,0.5]),
             aug.Resize(),
-            aug.Grayscale(alpha=0.9, frequency=0.1),
-            aug.BilateralBlur(d=[1,2])
+            # aug.Grayscale(alpha=0.9, frequency=0.1),
+            # aug.BilateralBlur(d=[1,2])
         ]
     )
     handler.save_to_path(save_path=handler_save_path, overwrite=True)
@@ -87,7 +87,7 @@ for coco_image in dataset.images:
             bbox.append(item.bbox)
             segmentation.append(item.segmentation)
 
-
+    # print(segmentation)
     image, keypoints, bbox, poly = handler(image=img, keypoints= keypoints, bounding_boxes=bbox, polygons=segmentation)
     kpts_aug_list = keypoints[0].to_numpy(demarcation=True)[:, :2].reshape(ann_instance, keypoints_num, 2)
     kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
@@ -95,8 +95,8 @@ for coco_image in dataset.images:
 
     # print(image, keypoints, bbox, poly)
     cv2.imshow("a", image)
-    cv2.waitKey(5000)
-    break
+    cv2.waitKey(500)
+    # break
 
         # print(results)
 

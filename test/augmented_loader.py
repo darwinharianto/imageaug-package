@@ -97,7 +97,6 @@ def perform_augmentation(dataset_dict, handler: AugHandler):
             item["keypoints"] = np.asarray(keypoints[i].to_list(), dtype="float64").reshape(-1,3)
         if "bbox" in item:
             item["bbox"] = bbox[i].to_list()
-            print(item["bbox"])
         if "segmentation" in item:
             item["segmentation"] = [poly[i].to_list()]
         annots.append(item)
@@ -118,6 +117,7 @@ def mapper(dataset_dict):
 
     # img_buffer = image
     # img_buffer.append(img)
+    print(dataset_dict["annotations"][0])
     
     image, annots = perform_augmentation(dataset_dict=dataset_dict, handler=handler)
 
@@ -130,17 +130,19 @@ def mapper(dataset_dict):
     if True:
         vis_img = image.copy()
         bbox_list = [BBox.from_list(vals) for vals in dataset_dict["instances"].gt_boxes.tensor.numpy().tolist()]
-        seg_list = [Segmentation([Polygon.from_list(poly.tolist(), demarcation=False) for poly in seg_polys]) for seg_polys in dataset_dict["instances"].gt_masks.polygons]
-        # kpts_list = [Keypoint2D_List.from_numpy(arr, demarcation=True) for arr in dataset_dict["instances"].gt_keypoints.tensor.numpy()]
+        # seg_list = [Segmentation([Polygon.from_list(poly.tolist(), demarcation=False) for poly in seg_polys]) for seg_polys in dataset_dict["instances"].gt_masks.polygons]
+        kpts_list = [Keypoint2D_List.from_numpy(arr, demarcation=True) for arr in dataset_dict["instances"].gt_keypoints.tensor.numpy()]
         # print(bbox_list, seg_list, kpts_list)
         # for bbox, seg, kpts in zip(bbox_list, seg_list, kpts_list):
-        for bbox, seg in zip(bbox_list, seg_list):
-            if len(seg) > 0 and False:
-                vis_img = draw_segmentation(img=vis_img, segmentation=seg, transparent=True)
+        for bbox, kpts in zip(bbox_list, kpts_list):
+        # for bbox, seg in zip(bbox_list, seg_list):
+        # for bbox in zip(bbox_list):
+            # if len(seg) > 0 and False:
+            #     vis_img = draw_segmentation(img=vis_img, segmentation=seg, transparent=True)
             vis_img = draw_bbox(img=vis_img, bbox=bbox)
-            # vis_img = draw_keypoints(img=vis_img, keypoints=kpts.to_numpy(demarcation=True)[:, :2].tolist(), radius=1)
+            vis_img = draw_keypoints(img=vis_img, keypoints=kpts.to_numpy(demarcation=True)[:, :2].tolist(), radius=1)
         cv2.imshow("a", vis_img)
-        cv2.waitKey(5000)
+        cv2.waitKey(100)
         # aug_visualizer.step(vis_img)
 
     return dataset_dict
@@ -152,10 +154,9 @@ if __name__ == "__main__":
     with open('/Users/darwinharianto/Desktop/hayashida/Unreal/18_03_2020_18_03_10_coco-data/HSR-detectron.json') as f:
         dataset_dicts = json.loads(f.read())
     for dataset_dict in dataset_dicts:
-        print(dataset_dict)
         for item in dataset_dict["annotations"]:
-            del item["keypoints"]
+            # del item["keypoints"]
+            del item["segmentation"]
         dataset_dict = mapper(dataset_dict)
-        break
     # dataset_dict = mapper(dataset_dict)
     # data_loader = build_detection_train_loader(cfg, mapper=mapper)
