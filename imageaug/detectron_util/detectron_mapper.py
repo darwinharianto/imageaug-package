@@ -1,5 +1,5 @@
-from annotation_utils.coco.refactored.structs import COCO_Dataset
-from annotation_utils.dataset.refactored.config.dataset_config import \
+from annotation_utils.coco.structs import COCO_Dataset
+from annotation_utils.dataset.config.dataset_config import \
     DatasetConfigCollectionHandler, DatasetConfigCollection, DatasetConfig
 from pasonatron.detectron2.util.dataset_parser import Detectron2_Annotation_Dict
 from detectron2.data import DatasetCatalog, MetadataCatalog
@@ -15,7 +15,7 @@ from detectron2 import model_zoo
 from detectron2.engine import DefaultTrainer
 
 from logger import logger
-from annotation_utils.coco.refactored.structs import COCO_Dataset
+from annotation_utils.coco.structs import COCO_Dataset
 from common_utils.file_utils import file_exists
 
 from pasonatron.detectron2.lib.roi_heads import CustomROIHeads, ROI_HEADS_REGISTRY
@@ -40,17 +40,6 @@ from common_utils.common_types.segmentation import Segmentation, Polygon
 from common_utils.file_utils import file_exists
 from imageaug import AugHandler, Augmenter as aug
 
-
-
-class Test_Keypoint_Trainer(DefaultTrainer):
-    def __init__(self, cfg):
-        super().__init__(cfg=cfg)
-        self.predictor = DefaultPredictor(cfg)
-
-    @classmethod
-    def build_train_loader(cls, cfg):
-        return build_detection_train_loader(cfg=cfg, mapper=mapper)
-
 def load_augmentation_settings(handler_save_path: str):
 
     if not file_exists(handler_save_path):
@@ -64,18 +53,7 @@ def load_augmentation_settings(handler_save_path: str):
         handler = AugHandler.load_from_path(handler_save_path)
 
     return handler
-
-
-def register_dataset_to_detectron(instance_name: str,img_dir_path: str, ann_path: str):
-    register_coco_instances(
-        name=instance_name,
-        metadata={},
-        json_file=ann_path,
-        image_root=img_dir_path
-    )
-    MetadataCatalog.get(instance_name).thing_classes = ['Measure', 'numbers']
-
-
+    
 def mapper(dataset_dict):
     # Implement a mapper, similar to the default DatasetMapper, but with your own customizations
     dataset_dict = copy.deepcopy(dataset_dict)  # it will be modified by code below
@@ -92,39 +70,3 @@ def mapper(dataset_dict):
     dataset_dict["instances"] = utils.filter_empty_instances(instances)
 
     return dataset_dict
-
-def setup_config_file(instance_name:str, cfg, detectron_model:str, max_iter: int = 300, base_lr:float = 0.015, num_workers: int = 2, ims_per_batch: int = 2, BATCH_SIZE_PER_IMAGE: int = 128):
-
-
-    cfg.merge_from_file(model_zoo.get_config_file(detectron_model))
-    cfg.DATASETS.TRAIN = (instance_name,)
-    cfg.DATASETS.TEST = (instance_name,)  # no metrics implemented for this dataset
-    cfg.DATALOADER.NUM_WORKERS = num_workers
-    cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(detectron_model)  # initialize from model zoo
-    cfg.SOLVER.IMS_PER_BATCH = ims_per_batch
-    cfg.SOLVER.BASE_LR = base_lr
-    cfg.SOLVER.MAX_ITER = (
-        max_iter
-    )  # 300 iterations seems good enough, but you can certainly train longer
-    cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = (
-        BATCH_SIZE_PER_IMAGE
-    )  # faster, and good enough for this toy dataset
-    cfg.MODEL.ROI_HEADS.NUM_CLASSES = len(MetadataCatalog.get(instance_name).thing_classes)  
-    return cfg
-
-if __name__ == "__main__":
-
-    instance_name = "measure"
-    dest_folder_img_combined = "../../../coco_data_measure_random_color"
-    dest_json_file_combined = "../../../coco_data_measure_random_color/HSR-coco.json"
-
-    register_dataset_to_detectron(instance_name=instance_name,img_dir_path= dest_folder_img_combined, ann_path = dest_json_file_combined)
-
-    cfg = setup_config_file(instance_name=instance_name, cfg=get_cfg(), detectron_model="COCO-Detection/faster_rcnn_X_101_32x8d_FPN_3x.yaml")
-
-    os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
-
-    trainer = Test_Keypoint_Trainer(cfg)
-    trainer.resume_or_load(resume=False)
-    trainer.train()
-
