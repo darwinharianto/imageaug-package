@@ -46,6 +46,7 @@ def load_augmentation_settings(handler_save_path: str):
         handler = AugHandler(
             [
                 aug.Crop(percent=[0.2, 0.5]),
+                aug.Affine(scale = {"x": tuple([0.8, 1.2]), "y":tuple([0.8, 1.2])}, translate_percent= {"x": tuple([0.1, 0.11]), "y":tuple([0.1, 0.11])}, rotate= [-180, 180], order= [0, 0], cval= [0, 0], shear= [0,0])
             ]
         )
         handler.save_to_path(save_path=handler_save_path, overwrite=True)
