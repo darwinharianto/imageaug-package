@@ -53,13 +53,13 @@ def load_augmentation_settings(handler_save_path: str):
         handler = AugHandler.load_from_path(handler_save_path)
 
     return handler
-    
+
 def mapper(dataset_dict):
     # Implement a mapper, similar to the default DatasetMapper, but with your own customizations
     dataset_dict = copy.deepcopy(dataset_dict)  # it will be modified by code below
     image = utils.read_image(dataset_dict["file_name"], format="BGR")
 
-    handler = load_augmentation_settings(handler_save_path = 'test_handler.json')    
+    handler = load_augmentation_settings(handler_save_path = 'augmentation_settings.json')    
     image, dataset_dict = handler(image=image, dataset_dict_detectron=dataset_dict)
     
     annots = [obj for obj in dataset_dict.pop("annotations")
