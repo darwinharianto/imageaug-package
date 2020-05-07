@@ -938,11 +938,13 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
 
             for i in range(len(dataset_dict["annotations"])):
                 if "keypoints" in dataset_dict["annotations"][i]:
-                    dataset_dict["annotations"][i]["keypoints"] = np.asarray(keypoints[i].to_list(), dtype="float64").reshape(-1,3)
+                    if len(dataset_dict["annotations"][i]["keypoints"]) != 0:
+                        dataset_dict["annotations"][i]["keypoints"] = np.asarray(keypoints[i].to_list(), dtype="float64").reshape(-1,3)
                 if "bbox" in dataset_dict["annotations"][i]:
                     dataset_dict["annotations"][i]["bbox"] = bbox[i].to_list()
                 if "segmentation" in dataset_dict["annotations"][i]:
-                    dataset_dict["annotations"][i]["segmentation"] = [poly[i].to_list()]
+                    if len(dataset_dict["annotations"][i]["segmentation"]) != 0:
+                        dataset_dict["annotations"][i]["segmentation"] = [poly[i].to_list()]
             
 
 
