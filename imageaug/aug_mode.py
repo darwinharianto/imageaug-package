@@ -901,13 +901,15 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
             for item in dataset_dict["annotations"]:
                 ann_instance += 1
                 if "keypoints" in item:
-                    item["keypoints"] = Keypoint2D_List.from_numpy(np.array(item["keypoints"]))
-                    keypoints_num = len(item["keypoints"])
-                    keypoints.append(item["keypoints"])
+                    if len(item["keypoints"]) != 0:
+                        item["keypoints"] = Keypoint2D_List.from_numpy(np.array(item["keypoints"]))
+                        keypoints_num = len(item["keypoints"])
+                        keypoints.append(item["keypoints"])
 
                 if "segmentation" in item:
-                    item["segmentation"] = Segmentation.from_list(item["segmentation"])
-                    segmentation.append(item["segmentation"])
+                    if len(item["segmentation"]) != 0:
+                        item["segmentation"] = Segmentation.from_list(item["segmentation"])
+                        segmentation.append(item["segmentation"])
                 if "bbox" in item:
                     item["bbox"] = BBox(xmin=item["bbox"][0], xmax=item["bbox"][0]+item["bbox"][2], ymin=item["bbox"][1], ymax=item["bbox"][1]+item["bbox"][3])
                     bbox.append(item["bbox"])
