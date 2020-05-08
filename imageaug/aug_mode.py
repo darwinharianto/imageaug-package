@@ -511,19 +511,19 @@ class Grayscale(BaseMode['Grayscale']):
 
 
 class ElasticTransformation(BaseMode['ElasticTransformation']):
-    def __init__(self, alpha: list[float] = [0,40.0], sigma: list[float] = [4.0,8.0], frequency: float = None):
+    def __init__(self, alpha: list[float] = [0,40.0], sigma: list[float] = [4.0,6.0], frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='alpha',
             lower_limit=0,
-            upper_limit=40.0,
+            upper_limit=100.0,
             value=alpha
         )
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='sigma',
-            lower_limit=4.0,
-            upper_limit=8.0,
+            lower_limit=0.0,
+            upper_limit=10.0,
             value=sigma
         )
         self.alpha = alpha
