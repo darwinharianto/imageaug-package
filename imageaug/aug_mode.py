@@ -424,7 +424,7 @@ class Multiply(BaseMode['Multiply']):
             class_name=self.__class__.__name__,
             param_name='mul',
             lower_limit=0,
-            upper_limit=2,
+            upper_limit=1.5,
             value=mul
         )
         check_param(
