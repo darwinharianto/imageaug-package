@@ -146,7 +146,7 @@ class Crop(BaseMode['Crop']):
         return Crop(percent=working_dict['percent'], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Superpixels(BaseMode['Superpixels']):
-    def __init__(self, p_replace: List[float]=[0, 1.0], n_segments: List[int]=[20,200], frequency: float = None):
+    def __init__(self, p_replace: List[float]=[0, 1.0], n_segments: List[int]=[0,200], frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='p_replace',
@@ -157,7 +157,7 @@ class Superpixels(BaseMode['Superpixels']):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='n_segments',
-            lower_limit=20,
+            lower_limit=0,
             upper_limit=200,
             value=n_segments
         )
