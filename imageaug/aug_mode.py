@@ -970,20 +970,31 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
         
         for k,v in kwargs.items():
             if k == "image":
-                imgaug_kpts = KeypointsOnImage(keypoints=[], shape=kwargs["image"].shape)
-                imgaug_bboxes = BoundingBoxesOnImage(bounding_boxes=[], shape=kwargs["image"].shape)
-                imgaug_polys = PolygonsOnImage(polygons=[], shape=kwargs["image"].shape)
+                shape = kwargs["image"].shape
+                if shape == None:
+                     raise TypeError(f"image is empty")
+                imgaug_kpts = KeypointsOnImage(keypoints=[], shape=shape)
+                imgaug_bboxes = BoundingBoxesOnImage(bounding_boxes=[], shape=shape)
+                imgaug_polys = PolygonsOnImage(polygons=[], shape=shape)
             if k == "keypoints":
+                         
+                if len(kwargs["keypoints"]) == 0:
+                     raise TypeError(f"keypoints is empty")
                 for item in v:
                     # keypoints_iaa = v.to_imgaug(img_shape=kwargs["image"].shape).keypoints
                     imgaug_kpts.keypoints.extend(item.to_imgaug(img_shape=kwargs["image"].shape).keypoints)
                 kwargs["keypoints"] = imgaug_kpts
             if k == "polygons":
+                         
+                if len(kwargs["polygons"]) == 0:
+                     raise TypeError(f"polygons is empty")
                 for item in v:
                     # polygons_iaa =  v.to_imgaug(img_shape=kwargs["image"].shape).polygons
                     imgaug_polys.polygons.extend(item.to_imgaug(img_shape=kwargs["image"].shape).polygons)
                 kwargs["polygons"] = imgaug_polys
             if k == "bounding_boxes":
+                if len(kwargs["bounding_boxes"]) == 0:
+                     raise TypeError(f"bounding_boxes is empty")
                 for item in v:
                     # bboxes_iaa = v.to_imgaug()
                     imgaug_bboxes.bounding_boxes.append(item.to_imgaug())
