@@ -1,4 +1,4 @@
-from annotation_utils.coco.refactored.structs import COCO_Dataset
+from annotation_utils.coco.structs import COCO_Dataset
 from logger import logger
 from common_utils.image_utils import concat_n_images
 from common_utils.cv_drawing_utils import cv_simple_image_viewer
@@ -50,7 +50,7 @@ else:
             # aug.LinearContrast(alpha=[0.6,1.4], per_channel=True),
             # aug.Grayscale(alpha=0.8),
             # aug.Multiply(mul=[0.8,1.2], per_channel=False),
-            aug.ElasticTransformation(alpha=[0,40], sigma=[4,6]),
+            aug.ElasticTransformation(alpha=[0,40], sigma=[4,6], frequency = 0),
             # aug.PiecewiseAffine(scale=[0.0,0.05]),
             # aug.ContrastNormalization(alpha=[0.7,1], per_channel=True),
             # aug.AverageBlur(k=[1,7]),
@@ -60,7 +60,8 @@ else:
             # aug.DirectedEdgeDetect(alpha=[0,0.5], direction=[0,1]),
             # aug.Dropout(p=[0,0.05], per_channel=False),
             # aug.CoarseDropout(p=[0,0.5]),
-            aug.Resize(),
+            aug.Superpixels(frequency = 0.3),
+            aug.Resize(frequency=0),
             # aug.Grayscale(alpha=0.9, frequency=0.1),
             # aug.BilateralBlur(d=[1,2])
         ]

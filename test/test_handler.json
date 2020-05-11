@@ -1,54 +1,32 @@
 [
   {
-    "scale": {
-      "x": [
-        0.8,
-        1.2
-      ],
-      "y": [
-        0.8,
-        1.2
-      ]
-    },
-    "translate_percent": {
-      "x": [
-        0,
-        0.05
-      ],
-      "y": [
-        0,
-        0.05
-      ]
-    },
-    "rotate": [
-      -180,
-      180
-    ],
-    "order": [
+    "alpha": [
       0,
-      0
+      40
     ],
-    "cval": [
-      0,
-      0
+    "sigma": [
+      4,
+      6
     ],
-    "shear": [
-      0,
-      0
-    ],
-    "class_name": "Affine"
+    "frequency": 0,
+    "class_name": "ElasticTransformation"
   },
   {
-    "p": [
+    "p_replace": [
       0,
-      0.5
+      1.0
     ],
-    "class_name": "CoarseDropout",
-    "frequency": 0.2
+    "n_segments": [
+      20,
+      200
+    ],
+    "frequency": 0.3,
+    "class_name": "Superpixels"
   },
   {
     "width": 900,
     "height": 900,
+    "frequency": 0,
     "class_name": "Resize"
   }
 ]

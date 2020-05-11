@@ -989,7 +989,11 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                     imgaug_bboxes.bounding_boxes.append(item.to_imgaug())
                 kwargs["bounding_boxes"] = imgaug_bboxes
 
-        seq = iaa.Sequential([iaa.Sometimes(aug_modes.frequency ,aug_modes.aug) if aug_modes.frequency is not None else aug_modes.aug for aug_modes in self.aug_modes], random_order=self.random_order)
+        #seq = iaa.Sequential([iaa.Sometimes(aug_modes.frequency ,aug_modes.aug) if aug_modes.frequency is not None else aug_modes.aug for aug_modes in self.aug_modes], random_order=self.random_order)
+        sequential_array = [iaa.Sometimes(aug_modes.frequency ,aug_modes.aug) if aug_modes.frequency is not None and float(aug_modes.frequency)> 0 and float(aug_modes.frequency) < 1 else aug_modes.aug if aug_modes.frequency is not None and float(aug_modes.frequency)>= 1  else None if aug_modes.frequency is not None and float(aug_modes.frequency)<= 0 else aug_modes.aug for aug_modes in self.aug_modes]
+        sequential_array = [sublist for sublist in sequential_array if sublist]
+        print(sequential_array)
+        seq = iaa.Sequential(sequential_array, random_order=self.random_order )
         a = seq(*args, **kwargs)
 
         for items in a:
