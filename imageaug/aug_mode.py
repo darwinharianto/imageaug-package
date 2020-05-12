@@ -390,8 +390,8 @@ class Add(BaseMode['Add']):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='value',
-            lower_limit=-20,
-            upper_limit=20,
+            lower_limit=-100,
+            upper_limit=100,
             value=value
         )
         check_param(
