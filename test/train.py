@@ -47,10 +47,7 @@ from imageaug import AugHandler, Augmenter as aug
 
 
 class Test_Keypoint_Trainer(DefaultTrainer):
-    def __init__(self, cfg):
-        super().__init__(cfg=cfg)
-        self.predictor = DefaultPredictor(cfg)
-
+    
     @classmethod
     def build_train_loader(cls, cfg):
         return build_detection_train_loader(cfg=cfg, mapper=mapper)
