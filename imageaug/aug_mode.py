@@ -240,10 +240,20 @@ class Affine(BaseMode['Affine']):
             item_dict=working_dict,
             required_keys=['scale', 'translate_percent', 'rotate', 'order', 'cval', 'shear']
         )
-        working_dict["scale"]["x"] = tuple( working_dict["scale"]["x"])
-        working_dict["scale"]["y"] = tuple( working_dict["scale"]["y"])
-        working_dict["translate_percent"]["x"] = tuple( working_dict["translate_percent"]["x"])
-        working_dict["translate_percent"]["x"] = tuple( working_dict["translate_percent"]["x"])
+        if "x" in working_dict["scale"]:    
+            working_dict["scale"]["x"] = tuple( working_dict["scale"]["x"])
+        if "y" in working_dict["scale"]: 
+            working_dict["scale"]["y"] = tuple( working_dict["scale"]["y"])
+        if "x" not in working_dict["scale"] and "y" not in in working_dict["scale"]:
+             working_dict["scale"] = tuple( working_dict["scale"]) 
+        
+                         
+        if "x" in working_dict["translate_percent"]:    
+            working_dict["translate_percent"]["x"] = tuple( working_dict["translate_percent"]["x"])
+        if "y" in working_dict["translate_percent"]: 
+            working_dict["translate_percent"]["y"] = tuple( working_dict["translate_percent"]["y"])
+        if "x" not in working_dict["translate_percent"] and "y" not in in working_dict["translate_percent"]:
+             working_dict["translate_percent"] = tuple( working_dict["translate_percent"]) 
         return Affine(scale = working_dict['scale'], translate_percent= working_dict['translate_percent'], rotate = working_dict['rotate'], order = working_dict['order'], cval=tuple(working_dict['cval']), shear=tuple(working_dict['shear']), fit_output=working_dict["fit_output"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Sharpen(BaseMode['Sharpen']):
