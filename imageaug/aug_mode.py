@@ -179,7 +179,7 @@ class Superpixels(BaseMode['Superpixels']):
         return Superpixels(p_replace=working_dict['p_replace'], n_segments=working_dict['n_segments'], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Affine(BaseMode['Affine']):
-    def __init__(self, scale: dict = {"x": tuple([0.8, 1.2]), "y":tuple([0.8, 1.2])}, translate_percent: dict = {"x": tuple([0, 0]), "y":tuple([0, 0])}, rotate: list[float] = [-180, 180], order: list[float] = [0, 1], cval: list[float] = [0, 255], shear: list[float] = [0,1], frequency: float = None):
+    def __init__(self, scale: dict = {"x": tuple([0.8, 1.2]), "y":tuple([0.8, 1.2])}, translate_percent: dict = {"x": tuple([0, 0]), "y":tuple([0, 0])}, rotate: list[float] = [-180, 180], order: list[float] = [0, 1], cval: list[float] = [0, 255], shear: list[float] = [0,1], fit_output=True, frequency: float = None):
         if len(rotate) == 2:
             check_param_range(
                 class_name=self.__class__.__name__,
@@ -215,17 +215,18 @@ class Affine(BaseMode['Affine']):
         self.order = order
         self.cval = cval
         self.shear = shear
+        self.fit_output = fit_output
         for item in translate_percent:
             if any([item >0.2 for item in translate_percent[item]]):
                 logger.yellow(f"high translation on {item} detected, object could be out of image")
         if len(rotate) == 2:
-            super().__init__(aug=iaa.Affine(scale = scale, translate_percent = translate_percent, rotate = tuple(rotate), order = order, cval = tuple(cval), shear=tuple(shear)), frequency=frequency)
+            super().__init__(aug=iaa.Affine(scale = scale, translate_percent = translate_percent, rotate = tuple(rotate), order = order, cval = tuple(cval), shear=tuple(shear), fit_output=fit_output), frequency=frequency)
         else:
-            super().__init__(aug=iaa.Affine(scale = scale, translate_percent = translate_percent, rotate = rotate, order = order, cval = tuple(cval), shear=tuple(shear)), frequency=frequency)
+            super().__init__(aug=iaa.Affine(scale = scale, translate_percent = translate_percent, rotate = rotate, order = order, cval = tuple(cval), shear=tuple(shear), fit_output=fit_output), frequency=frequency)
 
     def change_rotate_to_right_angle(self) -> Affine:
         self.rotate = [0,90,180,270]
-        return Affine(scale = self.scale, translate_percent= self.translate_percent, rotate = self.rotate, order = self.order, cval=self.cval, shear=self.shear)
+        return Affine(scale = self.scale, translate_percent= self.translate_percent, rotate = self.rotate, order = self.order, cval=self.cval, shear=self.shear, fit_output=fit_output)
 
     @classmethod
     def from_dict(cls, mode_dict: dict) -> Affine:
@@ -243,7 +244,7 @@ class Affine(BaseMode['Affine']):
         working_dict["scale"]["y"] = tuple( working_dict["scale"]["y"])
         working_dict["translate_percent"]["x"] = tuple( working_dict["translate_percent"]["x"])
         working_dict["translate_percent"]["x"] = tuple( working_dict["translate_percent"]["x"])
-        return Affine(scale = working_dict['scale'], translate_percent= working_dict['translate_percent'], rotate = working_dict['rotate'], order = working_dict['order'], cval=tuple(working_dict['cval']), shear=tuple(working_dict['shear']), frequency=working_dict["frequency"] if "frequency" in working_dict else None)
+        return Affine(scale = working_dict['scale'], translate_percent= working_dict['translate_percent'], rotate = working_dict['rotate'], order = working_dict['order'], cval=tuple(working_dict['cval']), shear=tuple(working_dict['shear'], fit_output=working_dict["fit_output"]), frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Sharpen(BaseMode['Sharpen']):
     def __init__(self, alpha: list[float]= [0,1.0], lightness:list[float]=[0.75,1.5], frequency: float = None):
