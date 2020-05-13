@@ -244,7 +244,7 @@ class Affine(BaseMode['Affine']):
         working_dict["scale"]["y"] = tuple( working_dict["scale"]["y"])
         working_dict["translate_percent"]["x"] = tuple( working_dict["translate_percent"]["x"])
         working_dict["translate_percent"]["x"] = tuple( working_dict["translate_percent"]["x"])
-        return Affine(scale = working_dict['scale'], translate_percent= working_dict['translate_percent'], rotate = working_dict['rotate'], order = working_dict['order'], cval=tuple(working_dict['cval']), shear=tuple(working_dict['shear'], fit_output=working_dict["fit_output"]), frequency=working_dict["frequency"] if "frequency" in working_dict else None)
+        return Affine(scale = working_dict['scale'], translate_percent= working_dict['translate_percent'], rotate = working_dict['rotate'], order = working_dict['order'], cval=tuple(working_dict['cval']), shear=tuple(working_dict['shear']), fit_output=working_dict["fit_output"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Sharpen(BaseMode['Sharpen']):
     def __init__(self, alpha: list[float]= [0,1.0], lightness:list[float]=[0.75,1.5], frequency: float = None):
