@@ -325,7 +325,7 @@ class AdditiveGaussianNoise(BaseMode['AdditiveGaussianNoise']):
             class_name=self.__class__.__name__,
             param_name='scale',
             lower_limit=0,
-            upper_limit=15.0,
+            upper_limit=100.0,
             value=scale
         )
         check_param(
