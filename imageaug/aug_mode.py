@@ -966,8 +966,9 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
             for i in range(len(self.aug_modes)) :
                 items = self.aug_modes[i]
                 if isinstance(items, Affine):
-                    logger.red("polygons not found. Change affine to only rotate 90, 180, 270, 360")
-                    self.aug_modes[i] = self.aug_modes[i].change_rotate_to_right_angle()
+                    if self.aug_modes[i].rotate != [0,0]
+                        logger.red("polygons not found. Change affine to only rotate 90, 180, 270, 360")
+                        self.aug_modes[i] = self.aug_modes[i].change_rotate_to_right_angle()
         
         for k,v in kwargs.items():
             if k == "image":
