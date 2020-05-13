@@ -226,7 +226,7 @@ class Affine(BaseMode['Affine']):
 
     def change_rotate_to_right_angle(self) -> Affine:
         self.rotate = [0,90,180,270]
-        return Affine(scale = self.scale, translate_percent= self.translate_percent, rotate = self.rotate, order = self.order, cval=self.cval, shear=self.shear, fit_output=fit_output)
+        return Affine(scale = self.scale, translate_percent= self.translate_percent, rotate = self.rotate, order = self.order, cval=self.cval, shear=self.shear, fit_output=self.fit_output)
 
     @classmethod
     def from_dict(cls, mode_dict: dict) -> Affine:
