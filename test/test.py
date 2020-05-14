@@ -10,8 +10,11 @@ from common_utils.common_types.keypoint import Keypoint2D_List, Keypoint2D
 from imageaug import AugHandler, Augmenter as aug
 
 dataset = COCO_Dataset.load_from_path(
-    json_path='/Users/darwinharianto/Desktop/hayashida/Unreal/18_03_2020_18_03_10_coco-data/HSR-coco.json',
-    img_dir='/Users/darwinharianto/Desktop/hayashida/Unreal/18_03_2020_18_03_10_coco-data'
+    # json_path='/Users/darwinharianto/Desktop/hayashida/Unreal/18_03_2020_18_03_10_coco-data/HSR-coco.json',
+    # img_dir='/Users/darwinharianto/Desktop/hayashida/Unreal/18_03_2020_18_03_10_coco-data'
+
+    json_path='/Users/darwinharianto/Desktop/pasona_prob/gosar/combined.json',
+    img_dir='/Users/darwinharianto/Desktop/pasona_prob/gosar/combined_img'
 )
 
 resize_save_path = 'test_resize.json'
@@ -38,7 +41,7 @@ else:
     handler = AugHandler.load_from_path(handler_save_path)
     handler = AugHandler(aug_modes=
         [
-            # aug.Affine(scale = {"x": tuple([0.8, 1.2]), "y":tuple([0.8, 1.2])}, translate_percent= {"x": tuple([0.1, 0.11]), "y":tuple([0.1, 0.11])}, rotate= [-180, 180], order= [0, 0], cval= [0, 0], shear= [0,0]),
+             aug.Affine(scale = {"x": tuple([0.8, 1.2]), "y":tuple([0.8, 1.2])}, translate_percent= {"x": tuple([0.1, 0.11]), "y":tuple([0.1, 0.11])}, rotate= [-180, 180], order= [0, 0], cval= [0, 0], shear= [0,0], frequency=0.5),
             # aug.Crop(percent=[0.2, 0.5]),
             # aug.Flipud(p=0.5),
             # aug.Superpixels(),
@@ -50,7 +53,7 @@ else:
             # aug.LinearContrast(alpha=[0.6,1.4], per_channel=True),
             # aug.Grayscale(alpha=0.8),
             # aug.Multiply(mul=[0.8,1.2], per_channel=False),
-            aug.ElasticTransformation(alpha=[0,40], sigma=[4,6], frequency = 0),
+#            aug.ElasticTransformation(alpha=[0,40], sigma=[4,6], frequency = 0),
             # aug.PiecewiseAffine(scale=[0.0,0.05]),
             # aug.ContrastNormalization(alpha=[0.7,1], per_channel=True),
             # aug.AverageBlur(k=[1,7]),
@@ -60,8 +63,8 @@ else:
             # aug.DirectedEdgeDetect(alpha=[0,0.5], direction=[0,1]),
             # aug.Dropout(p=[0,0.05], per_channel=False),
             # aug.CoarseDropout(p=[0,0.5]),
-            aug.Superpixels(frequency = 0.3),
-            aug.Resize(frequency=0),
+#            aug.Superpixels(frequency = 0.3),
+#            aug.Resize(frequency=0),
             # aug.Grayscale(alpha=0.9, frequency=0.1),
             # aug.BilateralBlur(d=[1,2])
         ]
@@ -84,15 +87,17 @@ for coco_image in dataset.images:
             keypoints_num = len(item.keypoints)
             ann_instance += 1
 
-            keypoints.append(item.keypoints)
+            if len(item.keypoints) != 0:
+                keypoints.append(item.keypoints)
             bbox.append(item.bbox)
-            segmentation.append(item.segmentation)
+            if len(item.segmentation) != 0:
+                segmentation.append(item.segmentation)
 
-    # print(segmentation)
-    image, keypoints, bbox, poly = handler(image=img, keypoints= keypoints, bounding_boxes=bbox, polygons=segmentation)
-    kpts_aug_list = keypoints[0].to_numpy(demarcation=True)[:, :2].reshape(ann_instance, keypoints_num, 2)
-    kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
-    keypoints = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
+    print(segmentation)
+    image,  bbox, poly = handler(image=img, bounding_boxes=bbox, polygons=segmentation)
+    # kpts_aug_list = keypoints[0].to_numpy(demarcation=True)[:, :2].reshape(ann_instance, keypoints_num, 2)
+    # kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
+    # keypoints = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
 
     # print(image, keypoints, bbox, poly)
     cv2.imshow("a", image)
