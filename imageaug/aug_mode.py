@@ -972,6 +972,8 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                         logger.red(f"annotation has {test_len}")
                         logger.red(f"polygon after segmentation {len(poly)}")
                         for j in range(poly_index, poly_index+segmentation_length):
+                            print(f"adding index {j} ")
+                            print(f"adding {poly} ")
                             print(f"adding {poly[j]} ")
                             seg_dummy.append(poly[j].to_list())
                         if seg_dummy == []:
