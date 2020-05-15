@@ -911,9 +911,17 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
 
             for item in dataset_dict["annotations"]:
                 ann_instance += 1
+
+                if "segmentation" in item and "bbox" in item:
+                    if len(item["segmentation"]) != len(item["bbox"]):
+                        logger.red("invalid type of annotation")
+                        raise TypeError("invalid annotation number from bbox and segmentation")
                 if "keypoints" in item:
                     if len(item["keypoints"]) != 0:
                         item["keypoints"] = Keypoint2D_List.from_numpy(np.array(item["keypoints"]))
+                        if keypoints_num != 0 and keypoints_num != len(item["keypoints"]):
+                            logger.red("Not implemented multiple keypoints settings")
+                            raise Exception
                         keypoints_num = len(item["keypoints"])
                         keypoints.append(item["keypoints"])
 
@@ -926,11 +934,8 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                     item["bbox"] = BBox(xmin=item["bbox"][0], xmax=item["bbox"][0]+item["bbox"][2], ymin=item["bbox"][1], ymax=item["bbox"][1]+item["bbox"][3])
                     bbox.append(item["bbox"])
                     item["bbox_mode"] = BoxMode.XYXY_ABS
+                
             
-            logger.red("before augmentation: annot, bbox")
-            print(f"segmentation number: {len(segmentation)}")
-            print(len(dataset_dict["annotations"]))
-            print(len(bbox))
             if len(keypoints) != 0 and len(bbox) != 0 and len(segmentation) != 0:
                 image, keypoints, bbox, poly = self.perform_aug_modes(image=image, keypoints= keypoints, bounding_boxes=bbox, polygons=segmentation)
             elif len(keypoints) != 0 and len(bbox) != 0 and len(segmentation) == 0:
@@ -951,11 +956,6 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                 kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
                 keypoints = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
 
-            logger.red("after augmentation: annot, bbox count")
-            if "poly" in locals():
-                print(f"segmentation number: {len(poly)}")
-            print(len(dataset_dict["annotations"]))
-            print(len(bbox))
             for i in range(len(dataset_dict["annotations"])):
                 if "keypoints" in dataset_dict["annotations"][i]:
                     if len(dataset_dict["annotations"][i]["keypoints"]) != 0:
@@ -963,7 +963,6 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                     else:
                         del dataset_dict["annotations"][i]["keypoints"]
                 if "bbox" in dataset_dict["annotations"][i]:
-
 
                     dataset_dict["annotations"][i]["bbox"] = bbox[i].to_list()
                 if "segmentation" in dataset_dict["annotations"][i]:
@@ -1065,7 +1064,7 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
         if 'bbox_aug_list_from_poly' in locals():
             if 'bbox_aug_list' in locals():
                 bbox_aug_list = bbox_aug_list_from_poly
-                bbox_aug_list = bbox_aug_list
+                # bbox_aug_list = bbox_aug_list
                 logger.yellow(f"bbox from polygons is {len(bbox_aug_list_from_poly)}, while bbox is {len(bbox_aug_list)}")
                 if len(bbox_aug_list) != len(bbox_aug_list_from_poly):
                     logger.red("inconsistent between polygon and bboxes")
