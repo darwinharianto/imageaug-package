@@ -955,7 +955,7 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                 kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
                 keypoints = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
 
-            poly_index = 1
+            poly_index = 0
             for i in range(len(dataset_dict["annotations"])):
                 if "keypoints" in dataset_dict["annotations"][i]:
                     if len(dataset_dict["annotations"][i]["keypoints"]) != 0:
