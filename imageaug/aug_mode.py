@@ -1061,10 +1061,10 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
     
         if 'bbox_aug_list_from_poly' in locals():
             if 'bbox_aug_list' in locals():
-                bbox_aug_list = bbox_aug_list_from_poly
                 if len(bbox_aug_list) != len(bbox_aug_list_from_poly):
                     logger.red("inconsistent between polygon and bboxes")
                     raise TypeError(f"bbox from polygons is {len(bbox_aug_list_from_poly)}, while bbox is {len(bbox_aug_list)}")
+                bbox_aug_list = bbox_aug_list_from_poly
         if 'poly_aug_list' in locals():
             a = (image, bbox_aug_list, poly_aug_list)
             if 'kpts_aug_list' in locals():
