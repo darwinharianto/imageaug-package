@@ -971,11 +971,11 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                         for i in range(poly_index+1, poly_index+segmentation_length):
                             seg_dummy.append(poly[i].to_list())
                         dataset_dict["annotations"][i]["segmentation"] = seg_dummy
+                        poly_index += segmentation_length
+                        segmentation_from_poly = Segmentation.from_list(dataset_dict["annotations"][i]["segmentation"])
+                        dataset_dict["annotations"][i]["bbox"] = segmentation_from_poly.to_bbox().to_list()
                     else:
                         del dataset_dict["annotations"][i]["segmentation"]
-                    poly_index += segmentation_length
-                    segmentation_from_poly = Segmentation.from_list(dataset_dict["annotations"][i]["segmentation"])
-                    dataset_dict["annotations"][i]["bbox"] = segmentation_from_poly.to_bbox().to_list()
         
             return image, dataset_dict
         else:
