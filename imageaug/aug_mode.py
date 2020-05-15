@@ -950,7 +950,7 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                 kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
                 keypoints = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
 
-            logger.red("before augmentation: annot, bbox count")
+            logger.red("after augmentation: annot, bbox count")
             print(len(dataset_dict["annotations"]))
             print(len(bbox))
             for i in range(len(dataset_dict["annotations"])):
@@ -1062,7 +1062,7 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
         if 'bbox_aug_list_from_poly' in locals():
             if 'bbox_aug_list' in locals():
                 bbox_aug_list = bbox_aug_list_from_poly
-
+                logger.yellow(f"bbox from polygons is {len(bbox_aug_list_from_poly)}, while bbox is {len(bbox_aug_list)}")
                 if len(bbox_aug_list) != len(bbox_aug_list_from_poly):
                     logger.red("inconsistent between polygon and bboxes")
                     raise TypeError(f"bbox from polygons is {len(bbox_aug_list_from_poly)}, while bbox is {len(bbox_aug_list)}")
