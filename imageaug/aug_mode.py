@@ -928,6 +928,7 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                     item["bbox_mode"] = BoxMode.XYXY_ABS
             
             logger.red("before augmentation: annot, bbox")
+            print(f"segmentation number: {len(segmentation)}")
             print(len(dataset_dict["annotations"]))
             print(len(bbox))
             if len(keypoints) != 0 and len(bbox) != 0 and len(segmentation) != 0:
@@ -951,6 +952,8 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                 keypoints = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
 
             logger.red("after augmentation: annot, bbox count")
+            if "poly" in locals():
+                print(f"segmentation number: {len(poly)}")
             print(len(dataset_dict["annotations"]))
             print(len(bbox))
             for i in range(len(dataset_dict["annotations"])):
