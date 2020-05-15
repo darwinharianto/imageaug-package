@@ -1,18 +1,43 @@
 [
   {
-    "alpha": [
+    "scale": {
+      "x": [
+        0.5,
+        0.6
+      ],
+      "y": [
+        0.5,
+        0.6
+      ]
+    },
+    "translate_percent": {
+      "x": [
+        0,
+        0
+      ],
+      "y": [
+        0,
+        0
+      ]
+    },
+    "rotate": [
       0,
-      40
+      0
     ],
-    "sigma": [
-      4,
-      6
+    "order": [
+      0,
+      0
     ],
-    "class_name": "ElasticTransformation"
-  },
-  {
-    "width": 900,
-    "height": 900,
-    "class_name": "Resize"
+    "cval": [
+      0,
+      0
+    ],
+    "shear": [
+      0,
+      0
+    ],
+    "fit_output": true,
+    "frequency": 1,
+    "class_name": "Affine"
   }
 ]

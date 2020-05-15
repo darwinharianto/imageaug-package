@@ -177,7 +177,31 @@ def mapper(dataset_dict):
     dataset_dict = copy.deepcopy(dataset_dict)  # it will be modified by code below
     image = utils.read_image(dataset_dict["file_name"], format="BGR")
 
-    handler = load_augmentation_settings(handler_save_path = 'test_handler.json')   
+    handler = load_augmentation_settings(handler_save_path = 'test_handler.json')
+
+    for i in range(len(dataset_dict["annotations"])):
+        item = dataset_dict["annotations"][i]
+        if "segmentation" in item:
+            if len(item["segmentation"]) != 0:
+                segmentation = []
+                for segmentation_list in item["segmentation"]:
+                        if len(segmentation_list.to_list()) < 5:
+                            logger.red(coco_image.coco_url)
+                            logger.red(item.segmentation)
+                            logger.red(f"segmentation has abnormal point count {segmentation_list}" )
+                            continue 
+                        poly_shapely = segmentation_list.to_shapely()
+                        poly_list = list(zip(*poly_shapely.exterior.coords.xy))
+
+                        line_non_simple = shapely.geometry.LineString(poly_list)
+                        mls = shapely.ops.unary_union(line_non_simple)
+                        polygons = list(shapely.ops.polygonize(mls))
+                        poly_shapely = polygons
+
+                        segmentation.append(Segmentation.from_shapely(poly_shapely))
+                dataset_dict[i]["segmentation"] = segmentation
+
+
     image, dataset_dict = handler(image=image, dataset_dict_detectron=dataset_dict)
     
     annots = []

@@ -1010,19 +1010,6 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                 for item in v:
                     # polygons_iaa =  v.to_imgaug(img_shape=kwargs["image"].shape).polygons
                     imgaug_polys.polygons.extend(item.to_imgaug(img_shape=kwargs["image"].shape).polygons)
-            
-                if len(kwargs["polygons"]) != 0:
-                    print(kwargs["polygons"])
-                    test = Segmentation.from_list(imgaug_polys)
-                    for segmentation_list in test:
-                        a = segmentation_list.to_shapely()
-                        if not a.is_valid():
-                            logger.red("not a valid polygon")
-                            logger.red(f"polygon: {segmentation_list}")
-                            logger.red(f"polygon: {segmentation_list}")
-                        else:
-                            logger.green("valid polygon")
-                            
                 kwargs["polygons"] = imgaug_polys
             if k == "bounding_boxes":
                 if len(kwargs["bounding_boxes"]) == 0:

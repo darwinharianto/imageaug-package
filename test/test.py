@@ -5,7 +5,11 @@ from common_utils.cv_drawing_utils import cv_simple_image_viewer
 from common_utils.file_utils import file_exists
 import cv2
 from common_utils.common_types.keypoint import Keypoint2D_List, Keypoint2D
-
+from common_utils.common_types.segmentation import Segmentation, Polygon
+import shapely
+from shapely import ops
+import numpy as np
+from common_utils.cv_drawing_utils import draw_keypoints, cv_simple_image_viewer, draw_bbox, draw_segmentation
 
 from imageaug import AugHandler, Augmenter as aug
 
@@ -41,7 +45,7 @@ else:
     handler = AugHandler.load_from_path(handler_save_path)
     handler = AugHandler(aug_modes=
         [
-             aug.Affine(scale = {"x": tuple([0.8, 1.2]), "y":tuple([0.8, 1.2])}, translate_percent= {"x": tuple([0.1, 0.11]), "y":tuple([0.1, 0.11])}, rotate= [-180, 180], order= [0, 0], cval= [0, 0], shear= [0,0], frequency=0.5),
+             aug.Affine(scale = {"x": tuple([0.5, 0.6]), "y":tuple([0.5, 0.6])}, translate_percent= {"x": tuple([0, 0]), "y":tuple([0, 0])}, rotate= [0, 0], order= [0, 0], cval= [0, 0], shear= [0,0], frequency=1),
             # aug.Crop(percent=[0.2, 0.5]),
             # aug.Flipud(p=0.5),
             # aug.Superpixels(),
@@ -90,19 +94,44 @@ for coco_image in dataset.images:
             if len(item.keypoints) != 0:
                 keypoints.append(item.keypoints)
             bbox.append(item.bbox)
-            if len(item.segmentation) != 0:
-                segmentation.append(item.segmentation)
+            
+            if item.segmentation:
+                if len(item.segmentation) != 0:
 
-    print(segmentation)
-    image,  bbox, poly = handler(image=img, bounding_boxes=bbox, polygons=segmentation)
+                    for segmentation_list in item.segmentation:
+                        if len(segmentation_list.to_list()) < 5:
+                            logger.red(coco_image.coco_url)
+                            logger.red(item.segmentation)
+                            logger.red(f"segmentation has abnormal point count {segmentation_list}" )
+                            continue 
+                            
+                        poly_shapely = segmentation_list.to_shapely()
+                        poly_list = list(zip(*poly_shapely.exterior.coords.xy))
+                        line_non_simple = shapely.geometry.LineString(poly_list)
+                        mls = shapely.ops.unary_union(line_non_simple)
+                        polygons = list(shapely.ops.polygonize(mls))
+                        poly_shapely = polygons
+
+                        segmentation.append(Segmentation.from_shapely(poly_shapely))
+    image, bbox, poly = handler(image=img, bounding_boxes=bbox, polygons=segmentation)
+    poly = [Segmentation(polygon_list=[pol]) for pol in poly]
+    print("total bbox after")
+    # for bboxes in bbox:
+    #     image = draw_bbox(img=image, bbox=bboxes)
+
+    # logger.yellow(poly[2])
+
+    for polygons in poly:
+        image = draw_segmentation(img=image, segmentation=polygons, transparent=False)
+    
+    print("finished drawing handler")
     # kpts_aug_list = keypoints[0].to_numpy(demarcation=True)[:, :2].reshape(ann_instance, keypoints_num, 2)
     # kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
     # keypoints = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
 
     # print(image, keypoints, bbox, poly)
     cv2.imshow("a", image)
-    cv2.waitKey(500)
-    # break
+    cv2.waitKey(8000)
 
         # print(results)
 
