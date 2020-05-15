@@ -968,11 +968,16 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                     segmentation_length = len(dataset_dict["annotations"][i]["segmentation"])
                     seg_dummy = []
                     if len(dataset_dict["annotations"][i]["segmentation"]) != 0:
+                        test_len = len(dataset_dict["annotations"][i]["segmentation"])
+                        logger.red(f"annotation has {test_len}")
+                        logger.red(f"polygon after segmentation {len(poly)}")
                         for j in range(poly_index, poly_index+segmentation_length):
+                            print(f"adding {poly[j]} ")
                             seg_dummy.append(poly[j].to_list())
                         if seg_dummy == []:
-                            raise TypeError("seg_dummy segmentation empty")
+                            raise TypeError("segmentation empty")
                         dataset_dict["annotations"][i]["segmentation"] = seg_dummy
+                        logger.yellow(seg_dummy)
                         poly_index += segmentation_length
                         segmentation_from_poly = Segmentation.from_list(dataset_dict["annotations"][i]["segmentation"])
                         dataset_dict["annotations"][i]["bbox"] = segmentation_from_poly.to_bbox().to_list()
