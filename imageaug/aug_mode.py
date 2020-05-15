@@ -967,6 +967,7 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                 if "segmentation" in dataset_dict["annotations"][i]:
                     segmentation_length = len(dataset_dict["annotations"][i]["segmentation"])
                     seg_dummy = []
+                    print(poly)
                     if len(dataset_dict["annotations"][i]["segmentation"]) != 0:
                         for j in range(poly_index+1, poly_index+segmentation_length):
                             seg_dummy.append(poly[j].to_list())
