@@ -949,11 +949,13 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
             elif len(keypoints) == 0 and len(bbox) == 0 and len(segmentation) != 0:
                 image, poly = self.perform_aug_modes(image=image, polygons=segmentation)
             
+
             if "keypoints" in locals() and len(keypoints) != 0:
                 kpts_aug_list = keypoints[0].to_numpy(demarcation=True)[:, :2].reshape(ann_instance, keypoints_num, 2)
                 kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
                 keypoints = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
 
+            poly_index = 0
             for i in range(len(dataset_dict["annotations"])):
                 if "keypoints" in dataset_dict["annotations"][i]:
                     if len(dataset_dict["annotations"][i]["keypoints"]) != 0:
@@ -961,13 +963,19 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                     else:
                         del dataset_dict["annotations"][i]["keypoints"]
                 if "bbox" in dataset_dict["annotations"][i]:
-
                     dataset_dict["annotations"][i]["bbox"] = bbox[i].to_list()
                 if "segmentation" in dataset_dict["annotations"][i]:
+                    segmentation_length = len(dataset_dict["annotations"][i]["segmentation"])
+                    seg_dummy = []
                     if len(dataset_dict["annotations"][i]["segmentation"]) != 0:
-                        dataset_dict["annotations"][i]["segmentation"] = [poly[i].to_list()]
+                        for i in range(poly_index+1, poly_index+segmentation_length):
+                            seg_dummy.append(poly[i].to_list())
+                        dataset_dict["annotations"][i]["segmentation"] = seg_dummy
                     else:
                         del dataset_dict["annotations"][i]["segmentation"]
+                    poly_index += segmentation_length
+                    segmentation_from_poly = Segmentation.from_list(dataset_dict["annotations"][i]["segmentation"])
+                    dataset_dict["annotations"][i]["bbox"] = segmentation_from_poly.to_bbox().to_list()
         
             return image, dataset_dict
         else:
@@ -1035,7 +1043,7 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
             elif isinstance(items, PolygonsOnImage):
                 items.remove_out_of_image().clip_out_of_image()
                 poly_aug_list = [Polygon.from_imgaug(imgaug_polygon) for imgaug_polygon in items.polygons]
-                bbox_aug_list_from_poly = [poly_aug.to_bbox() for poly_aug in poly_aug_list]
+                # bbox_aug_list_from_poly = [poly_aug.to_bbox() for poly_aug in poly_aug_list]
                 # Adjust BBoxes when Segmentation BBox does not contain all keypoints
                 # TODO need to consider this method
                 # for i in range(len(bbox_aug_list_from_poly)):
@@ -1059,12 +1067,6 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
             else:
                 image = items
     
-        if 'bbox_aug_list_from_poly' in locals():
-            if 'bbox_aug_list' in locals():
-                if len(bbox_aug_list) != len(bbox_aug_list_from_poly):
-                    logger.red("inconsistent between polygon and bboxes")
-                    raise TypeError(f"bbox from polygons is {len(bbox_aug_list_from_poly)}, while bbox is {len(bbox_aug_list)}")
-                bbox_aug_list = bbox_aug_list_from_poly
         if 'poly_aug_list' in locals():
             a = (image, bbox_aug_list, poly_aug_list)
             if 'kpts_aug_list' in locals():
