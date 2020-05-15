@@ -977,7 +977,6 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                         if seg_dummy == []:
                             raise TypeError("segmentation empty")
                         dataset_dict["annotations"][i]["segmentation"] = seg_dummy
-                        logger.yellow(seg_dummy)
                         poly_index += segmentation_length
                         segmentation_from_poly = Segmentation.from_list(dataset_dict["annotations"][i]["segmentation"])
                         dataset_dict["annotations"][i]["bbox"] = segmentation_from_poly.to_bbox().to_list()
