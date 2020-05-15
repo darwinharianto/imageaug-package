@@ -107,6 +107,7 @@ for coco_image in dataset.images:
                             
                         poly_shapely = segmentation_list.to_shapely()
                         poly_list = list(zip(*poly_shapely.exterior.coords.xy))
+                        
                         line_non_simple = shapely.geometry.LineString(poly_list)
                         mls = shapely.ops.unary_union(line_non_simple)
                         polygons = list(shapely.ops.polygonize(mls))
