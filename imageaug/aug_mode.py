@@ -911,7 +911,7 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
 
             for item in dataset_dict["annotations"]:
                 ann_instance += 1
-                
+
                 if "keypoints" in item:
                     if len(item["keypoints"]) != 0:
                         item["keypoints"] = Keypoint2D_List.from_numpy(np.array(item["keypoints"]))
@@ -930,12 +930,13 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                     bbox.append(item["bbox"])
                     item["bbox_mode"] = BoxMode.XYXY_ABS
                 
-
                 if "segmentation" in item and "bbox" in item:
                     if len(segmentation) != len(bbox):
                         logger.red("invalid type of annotation")
                         raise TypeError("invalid annotation number from bbox and segmentation")
-                
+            if len(segmentation) != len(bbox):
+                logger.red(f"invalid type of annotation, bbox count: {len(bbox)}, segmentation count: {len(segmentation)}")
+                raise TypeError("invalid annotation number from bbox and segmentation")
             
             logger.red("before augmentation: annot, bbox")
             print(f"segmentation number: {len(segmentation)}")
