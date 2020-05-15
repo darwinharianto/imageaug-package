@@ -920,14 +920,6 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                 if "segmentation" in item:
                     if len(item["segmentation"]) != 0:
                         item["segmentation"] = Segmentation.from_list(item["segmentation"])
-                        for segmentation_list in item["segmentation"]:
-                            a = segmentation_list.to_shapely()
-                            if not a.is_valid():
-                                logger.red("not a valid polygon")
-                                logger.red(f"polygon: {segmentation_list}")
-                                logger.red(f"polygon: {segmentation_list}")
-                            else:
-                                logger.green("valid polygon")
 
                         segmentation.append(item["segmentation"])
                 if "bbox" in item:
