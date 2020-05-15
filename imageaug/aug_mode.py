@@ -927,10 +927,10 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                     bbox.append(item["bbox"])
                     item["bbox_mode"] = BoxMode.XYXY_ABS
             
-            logger.red("before augmentation: annot, bbox")
-            print(f"segmentation number: {len(segmentation)}")
-            print(len(dataset_dict["annotations"]))
-            print(len(bbox))
+            # logger.red("before augmentation: annot, bbox")
+            # print(f"segmentation number: {len(segmentation)}")
+            # print(len(dataset_dict["annotations"]))
+            # print(len(bbox))
             if len(keypoints) != 0 and len(bbox) != 0 and len(segmentation) != 0:
                 image, keypoints, bbox, poly = self.perform_aug_modes(image=image, keypoints= keypoints, bounding_boxes=bbox, polygons=segmentation)
             elif len(keypoints) != 0 and len(bbox) != 0 and len(segmentation) == 0:
@@ -951,11 +951,11 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                 kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
                 keypoints = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
 
-            logger.red("after augmentation: annot, bbox count")
-            if "poly" in locals():
-                print(f"segmentation number: {len(poly)}")
-            print(len(dataset_dict["annotations"]))
-            print(len(bbox))
+            # logger.red("after augmentation: annot, bbox count")
+            # if "poly" in locals():
+            #     print(f"segmentation number: {len(poly)}")
+            # print(len(dataset_dict["annotations"]))
+            # print(len(bbox))
             for i in range(len(dataset_dict["annotations"])):
                 if "keypoints" in dataset_dict["annotations"][i]:
                     if len(dataset_dict["annotations"][i]["keypoints"]) != 0:
