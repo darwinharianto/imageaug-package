@@ -44,8 +44,3 @@ class AugVisualizer:
             )
             cv2.imwrite(self.vis_save_path, result)
             self.vis_buffer = []
-
-aug_visualizer = AugVisualizer(
-    vis_save_path='aug_vis.png',
-    wait=None
-)
