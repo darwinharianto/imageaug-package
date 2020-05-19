@@ -6,14 +6,25 @@ from detectron2.data.datasets import register_coco_instances
 from detectron2 import model_zoo
 from logger import logger
 from common_utils.file_utils import file_exists
-from pasonatron.detectron2.lib.roi_heads import CustomROIHeads, ROI_HEADS_REGISTRY
 from detectron2.engine import DefaultTrainer
 from detectron2.config import get_cfg
-from imageaug import AugHandler, Augmenter as aug
+from detectron2.data import build_detection_train_loader
+from detectron2.data import transforms as T
+from detectron2.data import detection_utils as utils
+import numpy as np
+from imageaug import AugHandler, Augmenter as aug,  AugVisualizer
+
+from common_utils.cv_drawing_utils import cv_simple_image_viewer, draw_bbox, draw_keypoints, draw_segmentation
+from common_utils.common_types.keypoint import Keypoint2D_List, Keypoint2D
+from common_utils.common_types.bbox import BBox
+from common_utils.common_types.segmentation import Segmentation, Polygon
+from common_utils.file_utils import file_exists
 import copy
 import torch
 from detectron2.data import detection_utils as utils
 from detectron2.data import build_detection_train_loader
+from detectron2.data import DatasetMapper
+import os
 
 def load_augmentation_settings(handler_save_path: str):
 
@@ -46,6 +57,9 @@ class MyMapper(DatasetMapper):
         # USER: Write your own image loading if it's not from a file
         image = utils.read_image(dataset_dict["file_name"], format=self.img_format)
         utils.check_image_size(dataset_dict, image)
+
+        for i in range(len(dataset_dict["annotations"])):
+            dataset_dict["annotations"][i]["segmentation"] = []
 
         ### my code ##
         image, dataset_dict = self.aug_handler(image=image, dataset_dict_detectron=dataset_dict)
@@ -120,6 +134,18 @@ class MyMapper(DatasetMapper):
             sem_seg_gt = transforms.apply_segmentation(sem_seg_gt)
             sem_seg_gt = torch.as_tensor(sem_seg_gt.astype("long"))
             dataset_dict["sem_seg"] = sem_seg_gt
+        
+        #### this uses local variable, use with caution ######
+        if True:
+            vis_img = image.copy()
+            bbox_list = [BBox.from_list(vals) for vals in dataset_dict["instances"].gt_boxes.tensor.numpy().tolist()]
+            # seg_list = [Segmentation([Polygon.from_list(poly.tolist(), demarcation=False) for poly in seg_polys]) for seg_polys in dataset_dict["instances"].gt_masks.polygons]
+            for bbox in (bbox_list):
+                # if len(seg) > 0 and False:
+                #     vis_img = draw_segmentation(img=vis_img, segmentation=seg, transparent=True)
+                vis_img = draw_bbox(img=vis_img, bbox=bbox)
+            aug_vis.step(vis_img)    
+        
         return dataset_dict
 
 def make_config_file_from_datasets(datasets_dict: {}, config_path: str):
@@ -188,30 +214,40 @@ def setup_config_file(instance_name:str, cfg):
 
 
 
+
 class Trainer(DefaultTrainer):
     
     def __init__(self, cfg, aug_settings_file_path):
+        """
+        Args:
+            cfg (CfgNode):
+        """
         super().__init__(cfg)
-        self.aug_settings_file_path = aug_settings_file_path
+        data_loader = self.build_train_loader(cfg, aug_settings_file_path) 
     
     @classmethod
     def build_train_loader(cls, cfg, aug_settings_file_path: str=None):
         return build_detection_train_loader(cfg, mapper=(None if aug_settings_file_path is None else MyMapper(cfg, aug_settings_file_path, is_train=True)))
 
+
 if __name__ == "__main__":
 
     instance_name = "measure"
+    # config_path = "scratch_config.yaml"
     dest_folder_img_combined = "/home/doors/workspace/darwin/from_gosar/my_real_measure_selected/img/mp_900_26_04_2020_22_18_37_coco-data"
     dest_json_file_combined = "/home/doors/workspace/darwin/from_gosar/my_real_measure_selected/img/mp_900_26_04_2020_22_18_37_coco-data/measure-only.json"
 
     register_dataset_to_detectron(instance_name=instance_name,img_dir_path= dest_folder_img_combined, ann_path = dest_json_file_combined)
 
     cfg = setup_config_file(instance_name=instance_name, cfg=get_cfg())
-
+    
+    aug_vis = AugVisualizer(
+        vis_save_path='aug_vis.png',
+        wait=None
+    )
 
     os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
 
     trainer = Trainer(cfg= cfg, aug_settings_file_path = 'test_handler.json')
     trainer.resume_or_load(resume=False)
     trainer.train()
-
