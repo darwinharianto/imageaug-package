@@ -226,13 +226,13 @@ def setup_config_file(instance_name:str, cfg):
 
 class Trainer(DefaultTrainer):
     
-    def __init__(self, cfg, json_file_path):
+    def __init__(self, cfg, aug_settings_file_path):
         super().__init__(cfg)
-        self.aug_settings = json_file_path
+        self.aug_settings_file_path = aug_settings_file_path
     
     @classmethod
     def build_train_loader(cls, cfg):
-	mapper = MyMapper(cfg, self.aug_settings, is_train=self.is_train)
+	mapper = MyMapper(cfg, self.aug_settings_file_path, is_train=self.is_train)
         return build_detection_train_loader(cfg, mapper=mapper)
 
 if __name__ == "__main__":
@@ -248,7 +248,7 @@ if __name__ == "__main__":
 
     os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
 
-    trainer = Trainer(cfg= cfg, json_file_path = 'test_handler.json')
+    trainer = Trainer(cfg= cfg, aug_settings_file_path = 'test_handler.json')
     trainer.resume_or_load(resume=False)
     trainer.train()
 
