@@ -223,10 +223,12 @@ class Trainer(DefaultTrainer):
             cfg (CfgNode):
         """
         super().__init__(cfg)
-        data_loader = self.build_train_loader(cfg, aug_settings_file_path) 
+        self.data_loader = self.build_train_loader(cfg, aug_settings_file_path) 
+        self._data_loader_iter = iter(self.data_loader)
     
     @classmethod
     def build_train_loader(cls, cfg, aug_settings_file_path: str=None):
+        print(aug_settings_file_path)
         return build_detection_train_loader(cfg, mapper=(None if aug_settings_file_path is None else MyMapper(cfg, aug_settings_file_path, is_train=True)))
 
 
