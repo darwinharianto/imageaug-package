@@ -228,7 +228,8 @@ class Trainer(DefaultTrainer):
 
     @classmethod
     def build_train_loader(cls, cfg):
-	mapper = MyMapper()
+	aug_json_file_path = 'test_handler.json'
+	mapper = MyMapper(cfg, aug_json_file_path, is_train=self.is_train)
         return build_detection_train_loader(cfg, mapper=mapper)
 
 if __name__ == "__main__":
