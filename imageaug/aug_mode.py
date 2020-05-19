@@ -972,12 +972,15 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
     
     def perform_aug_modes(self, *args, **kwargs):
 
-        if "polygons" not in kwargs:
-            for i in range(len(self.aug_modes)) :
-                items = self.aug_modes[i]
+        
+        for i in range(len(self.aug_modes)) :
+            items = self.aug_modes[i]
+            if isinstance(items, Resize):
+                logger.yellow("Resize augmentation detected. If you are using detectron2, please consider if you really need to use this method")
+            if "polygons" not in kwargs:
                 if isinstance(items, Affine):
                     if self.aug_modes[i].rotate != [0,0]:
-                        logger.red("polygons not found. Change affine to only rotate 90, 180, 270, 360")
+                        logger.yellow("polygons not found. Change affine to only rotate 90, 180, 270, 360")
                         self.aug_modes[i] = self.aug_modes[i].change_rotate_to_right_angle()
         
         for k,v in kwargs.items():
