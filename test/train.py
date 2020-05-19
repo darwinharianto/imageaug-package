@@ -67,9 +67,9 @@ def load_augmentation_settings(handler_save_path: str):
     return handler
 
 class MyMapper(DatasetMapper):
-    def __init__(self, cfg, json_file_path, is_train=True):
+    def __init__(self, cfg, aug_settings_file_path, is_train=True):
         super().__init__(cfg, is_train=is_train)
-        self.aug_handler = AugHandler.load_from_path(json_file_path)
+        self.aug_handler = AugHandler.load_from_path(aug_settings_file_path)
     
     def __call__(self, dataset_dict):
         """
@@ -231,9 +231,8 @@ class Trainer(DefaultTrainer):
         self.aug_settings_file_path = aug_settings_file_path
     
     @classmethod
-    def build_train_loader(cls, cfg):
-	mapper = MyMapper(cfg, self.aug_settings_file_path, is_train=self.is_train)
-        return build_detection_train_loader(cfg, mapper=mapper)
+    def build_train_loader(cls, cfg, aug_settings_file_path: str=None):
+        return build_detection_train_loader(cfg, mapper=(None if aug_settings_file_path is None else MyMapper(cfg, aug_settings_file_path, is_train=True)))
 
 if __name__ == "__main__":
 
