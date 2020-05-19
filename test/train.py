@@ -1,55 +1,19 @@
-# save dataset configuration to config file
-
 from annotation_utils.coco.structs import COCO_Dataset
 from annotation_utils.dataset.config.dataset_config import \
     DatasetConfigCollectionHandler, DatasetConfigCollection, DatasetConfig
-from pasonatron.detectron2.util.dataset_parser import Detectron2_Annotation_Dict
 from detectron2.data import DatasetCatalog, MetadataCatalog
 from detectron2.data.datasets import register_coco_instances
-from detectron2.data.dataset_mapper import DatasetMapper
-import cv2
-import os
-from tqdm import tqdm
-from detectron2.data import DatasetCatalog, MetadataCatalog
-from detectron2.data.datasets import register_coco_instances
-from detectron2.config import get_cfg
 from detectron2 import model_zoo
-
 from logger import logger
-from annotation_utils.coco.structs import COCO_Dataset
 from common_utils.file_utils import file_exists
-
 from pasonatron.detectron2.lib.roi_heads import CustomROIHeads, ROI_HEADS_REGISTRY
-
-import imageaug
-from imageaug import AugHandler, Augmenter as aug
-from detectron2.data import build_detection_train_loader
 from detectron2.engine import DefaultTrainer
 from detectron2.config import get_cfg
-
-
-##### test
-
+from imageaug import AugHandler, Augmenter as aug
 import copy
 import torch
-from imgaug import augmenters as iaa
-import imgaug as ia
-from imgaug.augmentables.polys import PolygonsOnImage
-from imgaug.augmentables.kps import KeypointsOnImage
-from imgaug.augmentables.bbs import BoundingBoxesOnImage
-from detectron2.data import transforms as T
 from detectron2.data import detection_utils as utils
 from detectron2.data import build_detection_train_loader
-import numpy as np
-from logger import logger
-from common_utils.cv_drawing_utils import cv_simple_image_viewer, draw_bbox, draw_keypoints, draw_segmentation
-from common_utils.common_types.keypoint import Keypoint2D_List, Keypoint2D
-from common_utils.common_types.bbox import BBox
-from common_utils.common_types.segmentation import Segmentation, Polygon
-from common_utils.file_utils import file_exists
-from imageaug import AugHandler, Augmenter as aug
-from shapely.geometry import Polygon
-import shapely
 
 def load_augmentation_settings(handler_save_path: str):
 
