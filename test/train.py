@@ -203,10 +203,6 @@ def setup_config_file(instance_name:str, cfg):
     cfg.MODEL.ROI_HEADS.NAME = 'CustomROIHeads'
     cfg.DATASETS.TRAIN = (instance_name,)
     cfg.DATALOADER.NUM_WORKERS = 2
-<<<<<<< HEAD
-    cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-Detection/faster_rcnn_R_50_C4_1x.yaml")  # initialize from model zoo
-=======
->>>>>>> master
     cfg.SOLVER.IMS_PER_BATCH = 2
     cfg.SOLVER.BASE_LR = 0.003
     cfg.SOLVER.MAX_ITER = (10000)
