@@ -121,7 +121,7 @@ class Resize(BaseMode['Resize']):
         return Resize(width=working_dict['width'], height=working_dict['height'], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Crop(BaseMode['Crop']):
-    def __init__(self, percent: List[float]=[0, 0.3], frequency: float = None):
+    def __init__(self, percent: List[float]=[0, 0.3], keep_size = False, frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='percent',
@@ -130,7 +130,8 @@ class Crop(BaseMode['Crop']):
             value=percent
         )
         self.percent = percent
-        super().__init__(aug=iaa.Crop(percent=tuple(percent)), frequency=frequency)
+        self.keep_size = keep_size
+        super().__init__(aug=iaa.Crop(percent=tuple(percent), keep_size=keep_size), frequency=frequency)
 
     @classmethod
     def from_dict(cls, mode_dict: dict) -> Crop:
@@ -141,12 +142,12 @@ class Crop(BaseMode['Crop']):
         del working_dict['class_name']
         check_required_keys(
             item_dict=working_dict,
-            required_keys=['percent']
+            required_keys=['percent', 'keep_size']
         )
-        return Crop(percent=working_dict['percent'], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
+        return Crop(percent=working_dict['percent'], keep_size=working_dict['keep_size'], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Superpixels(BaseMode['Superpixels']):
-    def __init__(self, p_replace: List[float]=[0, 1.0], n_segments: List[int]=[20,200], frequency: float = None):
+    def __init__(self, p_replace: List[float]=[0, 1.0], n_segments: List[int]=[0,200], frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='p_replace',
@@ -157,7 +158,7 @@ class Superpixels(BaseMode['Superpixels']):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='n_segments',
-            lower_limit=20,
+            lower_limit=0,
             upper_limit=200,
             value=n_segments
         )
@@ -179,7 +180,7 @@ class Superpixels(BaseMode['Superpixels']):
         return Superpixels(p_replace=working_dict['p_replace'], n_segments=working_dict['n_segments'], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Affine(BaseMode['Affine']):
-    def __init__(self, scale: dict = {"x": tuple([0.8, 1.2]), "y":tuple([0.8, 1.2])}, translate_percent: dict = {"x": tuple([0, 0]), "y":tuple([0, 0])}, rotate: list[float] = [-180, 180], order: list[float] = [0, 1], cval: list[float] = [0, 255], shear: list[float] = [0,1], frequency: float = None):
+    def __init__(self, scale: dict = {"x": tuple([0.8, 1.2]), "y":tuple([0.8, 1.2])}, translate_percent: dict = {"x": tuple([0, 0]), "y":tuple([0, 0])}, rotate: list[float] = [-180, 180], order: list[float] = [0, 1], cval: list[float] = [0, 255], shear: list[float] = [0,1], fit_output=True, frequency: float = None):
         if len(rotate) == 2:
             check_param_range(
                 class_name=self.__class__.__name__,
@@ -215,17 +216,18 @@ class Affine(BaseMode['Affine']):
         self.order = order
         self.cval = cval
         self.shear = shear
+        self.fit_output = fit_output
         for item in translate_percent:
             if any([item >0.2 for item in translate_percent[item]]):
                 logger.yellow(f"high translation on {item} detected, object could be out of image")
         if len(rotate) == 2:
-            super().__init__(aug=iaa.Affine(scale = scale, translate_percent = translate_percent, rotate = tuple(rotate), order = order, cval = tuple(cval), shear=tuple(shear)), frequency=frequency)
+            super().__init__(aug=iaa.Affine(scale = scale, translate_percent = translate_percent, rotate = tuple(rotate), order = order, cval = tuple(cval), shear=tuple(shear), fit_output=fit_output), frequency=frequency)
         else:
-            super().__init__(aug=iaa.Affine(scale = scale, translate_percent = translate_percent, rotate = rotate, order = order, cval = tuple(cval), shear=tuple(shear)), frequency=frequency)
+            super().__init__(aug=iaa.Affine(scale = scale, translate_percent = translate_percent, rotate = rotate, order = order, cval = tuple(cval), shear=tuple(shear), fit_output=fit_output), frequency=frequency)
 
     def change_rotate_to_right_angle(self) -> Affine:
         self.rotate = [0,90,180,270]
-        return Affine(scale = self.scale, translate_percent= self.translate_percent, rotate = self.rotate, order = self.order, cval=self.cval, shear=self.shear)
+        return Affine(scale = self.scale, translate_percent= self.translate_percent, rotate = self.rotate, order = self.order, cval=self.cval, shear=self.shear, fit_output=self.fit_output)
 
     @classmethod
     def from_dict(cls, mode_dict: dict) -> Affine:
@@ -237,13 +239,23 @@ class Affine(BaseMode['Affine']):
         del working_dict['class_name']
         check_required_keys(
             item_dict=working_dict,
-            required_keys=['scale', 'translate_percent', 'rotate', 'order', 'cval', 'shear']
+            required_keys=['scale', 'translate_percent', 'rotate', 'order', 'cval', 'shear', 'fit_output']
         )
-        working_dict["scale"]["x"] = tuple( working_dict["scale"]["x"])
-        working_dict["scale"]["y"] = tuple( working_dict["scale"]["y"])
-        working_dict["translate_percent"]["x"] = tuple( working_dict["translate_percent"]["x"])
-        working_dict["translate_percent"]["x"] = tuple( working_dict["translate_percent"]["x"])
-        return Affine(scale = working_dict['scale'], translate_percent= working_dict['translate_percent'], rotate = working_dict['rotate'], order = working_dict['order'], cval=tuple(working_dict['cval']), shear=tuple(working_dict['shear']), frequency=working_dict["frequency"] if "frequency" in working_dict else None)
+        if "x" in working_dict["scale"]:    
+            working_dict["scale"]["x"] = tuple( working_dict["scale"]["x"])
+        if "y" in working_dict["scale"]: 
+            working_dict["scale"]["y"] = tuple( working_dict["scale"]["y"])
+        if "x" not in working_dict["scale"] and "y" not in working_dict["scale"]:
+             working_dict["scale"] = tuple( working_dict["scale"]) 
+        
+                         
+        if "x" in working_dict["translate_percent"]:    
+            working_dict["translate_percent"]["x"] = tuple( working_dict["translate_percent"]["x"])
+        if "y" in working_dict["translate_percent"]: 
+            working_dict["translate_percent"]["y"] = tuple( working_dict["translate_percent"]["y"])
+        if "x" not in working_dict["translate_percent"] and "y" not in working_dict["translate_percent"]:
+             working_dict["translate_percent"] = tuple( working_dict["translate_percent"]) 
+        return Affine(scale = working_dict['scale'], translate_percent= working_dict['translate_percent'], rotate = working_dict['rotate'], order = working_dict['order'], cval=tuple(working_dict['cval']), shear=tuple(working_dict['shear']), fit_output=working_dict["fit_output"], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Sharpen(BaseMode['Sharpen']):
     def __init__(self, alpha: list[float]= [0,1.0], lightness:list[float]=[0.75,1.5], frequency: float = None):
@@ -324,7 +336,7 @@ class AdditiveGaussianNoise(BaseMode['AdditiveGaussianNoise']):
             class_name=self.__class__.__name__,
             param_name='scale',
             lower_limit=0,
-            upper_limit=15.0,
+            upper_limit=100.0,
             value=scale
         )
         check_param(
@@ -390,8 +402,8 @@ class Add(BaseMode['Add']):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='value',
-            lower_limit=-20,
-            upper_limit=20,
+            lower_limit=-100,
+            upper_limit=100,
             value=value
         )
         check_param(
@@ -424,7 +436,7 @@ class Multiply(BaseMode['Multiply']):
             class_name=self.__class__.__name__,
             param_name='mul',
             lower_limit=0,
-            upper_limit=2,
+            upper_limit=1.5,
             value=mul
         )
         check_param(
@@ -511,19 +523,19 @@ class Grayscale(BaseMode['Grayscale']):
 
 
 class ElasticTransformation(BaseMode['ElasticTransformation']):
-    def __init__(self, alpha: list[float] = [0,40.0], sigma: list[float] = [4.0,8.0], frequency: float = None):
+    def __init__(self, alpha: list[float] = [0,40.0], sigma: list[float] = [4.0,6.0], frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='alpha',
             lower_limit=0,
-            upper_limit=40.0,
+            upper_limit=100.0,
             value=alpha
         )
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='sigma',
-            lower_limit=4.0,
-            upper_limit=8.0,
+            lower_limit=0.0,
+            upper_limit=10.0,
             value=sigma
         )
         self.alpha = alpha
@@ -888,36 +900,125 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
 
     def __call__(self, *args, **kwargs):
 
-        if "polygons" not in kwargs:
-            logger.red("polygons not found. Only rotate 90, 180, 270, 360")
-            for i in range(len(self.aug_modes)) :
-                items = self.aug_modes[i]
+        if "dataset_dict_detectron" in kwargs:
+            from detectron2.structures import BoxMode
+            dataset_dict = kwargs["dataset_dict_detectron"]
+
+            image = kwargs["image"]
+            keypoints = []
+            bbox = []
+            segmentation = []
+            ann_instance = 0
+
+            for item in dataset_dict["annotations"]:
+                ann_instance += 1
+                if "keypoints" in item:
+                    if len(item["keypoints"]) != 0:
+                        item["keypoints"] = Keypoint2D_List.from_numpy(np.array(item["keypoints"]))
+                        keypoints_num = len(item["keypoints"])
+                        keypoints.append(item["keypoints"])
+
+                if "segmentation" in item:
+                    if len(item["segmentation"]) != 0:
+                        item["segmentation"] = Segmentation.from_list(item["segmentation"])
+                        segmentation.append(item["segmentation"])
+                if "bbox" in item:
+                    item["bbox"] = BBox(xmin=item["bbox"][0], xmax=item["bbox"][0]+item["bbox"][2], ymin=item["bbox"][1], ymax=item["bbox"][1]+item["bbox"][3])
+                    bbox.append(item["bbox"])
+                    item["bbox_mode"] = BoxMode.XYXY_ABS
+            
+
+            if len(keypoints) != 0 and len(bbox) != 0 and len(segmentation) != 0:
+                image, keypoints, bbox, poly = self.perform_aug_modes(image=image, keypoints= keypoints, bounding_boxes=bbox, polygons=segmentation)
+            elif len(keypoints) != 0 and len(bbox) != 0 and len(segmentation) == 0:
+                image, keypoints, bbox = self.perform_aug_modes(image=image, keypoints= keypoints, bounding_boxes=bbox)
+            elif len(keypoints) != 0 and len(bbox) == 0 and len(segmentation) != 0:
+                image, keypoints, poly = self.perform_aug_modes(image=image, keypoints= keypoints, polygons=segmentation)
+            elif len(keypoints) != 0 and len(bbox) == 0 and len(segmentation) == 0:
+                image, keypoints = self.perform_aug_modes(image=image, keypoints= keypoints)
+            elif len(keypoints) == 0 and len(bbox) != 0 and len(segmentation) != 0:
+                image, bbox, poly = self.perform_aug_modes(image=image, bounding_boxes=bbox, polygons=segmentation)
+            elif len(keypoints) == 0 and len(bbox) != 0 and len(segmentation) == 0:
+                image, bbox = self.perform_aug_modes(image=image, bounding_boxes=bbox)
+            elif len(keypoints) == 0 and len(bbox) == 0 and len(segmentation) != 0:
+                image, poly = self.perform_aug_modes(image=image, polygons=segmentation)
+            
+            if "keypoints" in locals() and len(keypoints) != 0:
+                kpts_aug_list = keypoints[0].to_numpy(demarcation=True)[:, :2].reshape(ann_instance, keypoints_num, 2)
+                kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
+                keypoints = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
+
+            for i in range(len(dataset_dict["annotations"])):
+                if "keypoints" in dataset_dict["annotations"][i]:
+                    if len(dataset_dict["annotations"][i]["keypoints"]) != 0:
+                        dataset_dict["annotations"][i]["keypoints"] = np.asarray(keypoints[i].to_list(), dtype="float64").reshape(-1,3)
+                    else:
+                        del dataset_dict["annotations"][i]["keypoints"]
+                if "bbox" in dataset_dict["annotations"][i]:
+                    dataset_dict["annotations"][i]["bbox"] = bbox[i].to_list()
+                if "segmentation" in dataset_dict["annotations"][i]:
+                    if len(dataset_dict["annotations"][i]["segmentation"]) != 0:
+                        dataset_dict["annotations"][i]["segmentation"] = [poly[i].to_list()]
+                    else:
+                        del dataset_dict["annotations"][i]["segmentation"]
+            
+
+
+            return image, dataset_dict
+        else:
+
+            a = self.perform_aug_modes(*args, **kwargs)
+
+        return a
+    
+    def perform_aug_modes(self, *args, **kwargs):
+
+        
+        for i in range(len(self.aug_modes)) :
+            items = self.aug_modes[i]
+            if isinstance(items, Resize):
+                logger.yellow("Resize augmentation detected. If you are using detectron2, please consider if you really need to use this method")
+            if "polygons" not in kwargs:
                 if isinstance(items, Affine):
-                    logger.red("change affine")
-                    self.aug_modes[i] = self.aug_modes[i].change_rotate_to_right_angle()
+                    if self.aug_modes[i].rotate != [0,0]:
+                        logger.yellow("polygons not found. Change affine to only rotate 90, 180, 270, 360")
+                        self.aug_modes[i] = self.aug_modes[i].change_rotate_to_right_angle()
         
         for k,v in kwargs.items():
             if k == "image":
-                imgaug_kpts = KeypointsOnImage(keypoints=[], shape=kwargs["image"].shape)
-                imgaug_bboxes = BoundingBoxesOnImage(bounding_boxes=[], shape=kwargs["image"].shape)
-                imgaug_polys = PolygonsOnImage(polygons=[], shape=kwargs["image"].shape)
+                shape = kwargs["image"].shape
+                if shape == None:
+                     raise TypeError(f"image is empty")
+                imgaug_kpts = KeypointsOnImage(keypoints=[], shape=shape)
+                imgaug_bboxes = BoundingBoxesOnImage(bounding_boxes=[], shape=shape)
+                imgaug_polys = PolygonsOnImage(polygons=[], shape=shape)
             if k == "keypoints":
+                         
+                if len(kwargs["keypoints"]) == 0:
+                     raise TypeError(f"keypoints is empty")
                 for item in v:
                     # keypoints_iaa = v.to_imgaug(img_shape=kwargs["image"].shape).keypoints
                     imgaug_kpts.keypoints.extend(item.to_imgaug(img_shape=kwargs["image"].shape).keypoints)
                 kwargs["keypoints"] = imgaug_kpts
             if k == "polygons":
+                         
+                if len(kwargs["polygons"]) == 0:
+                     raise TypeError(f"polygons is empty")
                 for item in v:
                     # polygons_iaa =  v.to_imgaug(img_shape=kwargs["image"].shape).polygons
                     imgaug_polys.polygons.extend(item.to_imgaug(img_shape=kwargs["image"].shape).polygons)
                 kwargs["polygons"] = imgaug_polys
             if k == "bounding_boxes":
+                if len(kwargs["bounding_boxes"]) == 0:
+                     raise TypeError(f"bounding_boxes is empty")
                 for item in v:
                     # bboxes_iaa = v.to_imgaug()
                     imgaug_bboxes.bounding_boxes.append(item.to_imgaug())
                 kwargs["bounding_boxes"] = imgaug_bboxes
 
-        seq = iaa.Sequential([iaa.Sometimes(aug_modes.frequency ,aug_modes.aug) if aug_modes.frequency is not None else aug_modes.aug for aug_modes in self.aug_modes], random_order=self.random_order)
+        sequential_array = [iaa.Sometimes(aug_modes.frequency ,aug_modes.aug) if aug_modes.frequency is not None and float(aug_modes.frequency)> 0 and float(aug_modes.frequency) < 1 else aug_modes.aug if aug_modes.frequency is not None and float(aug_modes.frequency)>= 1  else None if aug_modes.frequency is not None and float(aug_modes.frequency)<= 0 else aug_modes.aug for aug_modes in self.aug_modes]
+        sequential_array = [sublist for sublist in sequential_array if sublist]
+        seq = iaa.Sequential(sequential_array, random_order=self.random_order )
         a = seq(*args, **kwargs)
 
         for items in a:
@@ -959,7 +1060,6 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
         if 'bbox_aug_list_from_poly' in locals():
             if 'bbox_aug_list' in locals():
                 bbox_aug_list = bbox_aug_list_from_poly
-
         if 'poly_aug_list' in locals():
             a = (image, bbox_aug_list, poly_aug_list)
             if 'kpts_aug_list' in locals():
@@ -970,6 +1070,7 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                 a = (image, kpts_aug_list, bbox_aug_list)
 
         return a
+
 
     def append_aug_modes(self, dict_list: List[dict]) -> []:
 

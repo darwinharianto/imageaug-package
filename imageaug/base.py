@@ -22,9 +22,14 @@ class BaseModeMeta(type):
 
 class BaseMode(Generic[T], metaclass= BaseModeMeta):
     def __init__(self, aug: iaa.Augmenter, frequency: float = None):
+        if frequency is not None:
+            if frequency < 0 or frequency > 1:
+                raise TypeError(f"frequency should be from 0 to 1")
         self.aug = aug
         self.class_name = self.__class__.__name__
         self.frequency = frequency
+        
+        
         
     # sample to raise error when init subclass
     def __init_subclass__(self, *a, **kw):

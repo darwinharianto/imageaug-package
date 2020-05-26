@@ -4,7 +4,7 @@ This module is used for image augmentation. Currently wrapped imagaug library fr
 
 # Installation
 ```
-pip install git+ssh://git@github.com/darwinharianto/imageaug-package.git
+pip install https://github.com/darwinharianto/imageaug-package/archive/master.zip
 
 # or clone locally
 git clone https://github.com/darwinharianto/imageaug-package.git
