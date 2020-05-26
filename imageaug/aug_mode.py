@@ -142,11 +142,7 @@ class Crop(BaseMode['Crop']):
         del working_dict['class_name']
         check_required_keys(
             item_dict=working_dict,
-            required_keys=['percent']
-        )
-        check_required_keys(
-            item_dict=working_dict,
-            required_keys=['keep_size']
+            required_keys=['percent', 'keep_size']
         )
         return Crop(percent=working_dict['percent'], keep_size=working_dict['keep_size'], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
@@ -243,7 +239,7 @@ class Affine(BaseMode['Affine']):
         del working_dict['class_name']
         check_required_keys(
             item_dict=working_dict,
-            required_keys=['scale', 'translate_percent', 'rotate', 'order', 'cval', 'shear']
+            required_keys=['scale', 'translate_percent', 'rotate', 'order', 'cval', 'shear', 'fit_output']
         )
         if "x" in working_dict["scale"]:    
             working_dict["scale"]["x"] = tuple( working_dict["scale"]["x"])
