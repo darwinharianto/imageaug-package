@@ -121,7 +121,7 @@ class Resize(BaseMode['Resize']):
         return Resize(width=working_dict['width'], height=working_dict['height'], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Crop(BaseMode['Crop']):
-    def __init__(self, percent: List[float]=[0, 0.3], frequency: float = None):
+    def __init__(self, percent: List[float]=[0, 0.3], keep_size = False, frequency: float = None):
         check_param_range(
             class_name=self.__class__.__name__,
             param_name='percent',
@@ -130,7 +130,8 @@ class Crop(BaseMode['Crop']):
             value=percent
         )
         self.percent = percent
-        super().__init__(aug=iaa.Crop(percent=tuple(percent)), frequency=frequency)
+        self.keep_size = keep_size
+        super().__init__(aug=iaa.Crop(percent=tuple(percent), keep_size=keep_size), frequency=frequency)
 
     @classmethod
     def from_dict(cls, mode_dict: dict) -> Crop:
@@ -143,7 +144,11 @@ class Crop(BaseMode['Crop']):
             item_dict=working_dict,
             required_keys=['percent']
         )
-        return Crop(percent=working_dict['percent'], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
+        check_required_keys(
+            item_dict=working_dict,
+            required_keys=['keep_size']
+        )
+        return Crop(percent=working_dict['percent'], keep_size=working_dict['keep_size'], frequency=working_dict["frequency"] if "frequency" in working_dict else None)
 
 class Superpixels(BaseMode['Superpixels']):
     def __init__(self, p_replace: List[float]=[0, 1.0], n_segments: List[int]=[0,200], frequency: float = None):
