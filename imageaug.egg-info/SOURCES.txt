@@ -2,6 +2,7 @@ README.md
 setup.py
 imageaug/__init__.py
 imageaug/aug_mode.py
+imageaug/aug_visualizer.py
 imageaug/base.py
 imageaug.egg-info/PKG-INFO
 imageaug.egg-info/SOURCES.txt

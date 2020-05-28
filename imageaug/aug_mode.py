@@ -16,6 +16,7 @@ from common_utils.common_types.keypoint import Keypoint2D_List, Keypoint2D
 from common_utils.common_types.bbox import BBox
 from common_utils.common_types.segmentation import Segmentation, Polygon
 from common_utils.file_utils import file_exists
+from common_utils.utils import unflatten_list
 
 from imgaug.augmentables.polys import PolygonsOnImage
 from imgaug.augmentables.kps import KeypointsOnImage
@@ -929,19 +930,19 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
             
 
             if len(keypoints) != 0 and len(bbox) != 0 and len(segmentation) != 0:
-                image, keypoints, bbox, poly = self.perform_aug_modes(image=image, keypoints= keypoints, bounding_boxes=bbox, polygons=segmentation)
+                image, keypoints, bbox, poly = self.perform_aug_modes(image=image, keypoints= keypoints, bounding_boxes=bbox, segmentations=segmentation)
             elif len(keypoints) != 0 and len(bbox) != 0 and len(segmentation) == 0:
                 image, keypoints, bbox = self.perform_aug_modes(image=image, keypoints= keypoints, bounding_boxes=bbox)
             elif len(keypoints) != 0 and len(bbox) == 0 and len(segmentation) != 0:
-                image, keypoints, poly = self.perform_aug_modes(image=image, keypoints= keypoints, polygons=segmentation)
+                image, keypoints, poly = self.perform_aug_modes(image=image, keypoints= keypoints, segmentations=segmentation)
             elif len(keypoints) != 0 and len(bbox) == 0 and len(segmentation) == 0:
                 image, keypoints = self.perform_aug_modes(image=image, keypoints= keypoints)
             elif len(keypoints) == 0 and len(bbox) != 0 and len(segmentation) != 0:
-                image, bbox, poly = self.perform_aug_modes(image=image, bounding_boxes=bbox, polygons=segmentation)
+                image, bbox, poly = self.perform_aug_modes(image=image, bounding_boxes=bbox, segmentations=segmentation)
             elif len(keypoints) == 0 and len(bbox) != 0 and len(segmentation) == 0:
                 image, bbox = self.perform_aug_modes(image=image, bounding_boxes=bbox)
             elif len(keypoints) == 0 and len(bbox) == 0 and len(segmentation) != 0:
-                image, poly = self.perform_aug_modes(image=image, polygons=segmentation)
+                image, poly = self.perform_aug_modes(image=image, segmentations=segmentation)
             
             if "keypoints" in locals() and len(keypoints) != 0:
                 kpts_aug_list = keypoints[0].to_numpy(demarcation=True)[:, :2].reshape(ann_instance, keypoints_num, 2)
@@ -972,18 +973,29 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
         return a
     
     def perform_aug_modes(self, *args, **kwargs):
-
         
         for i in range(len(self.aug_modes)) :
             items = self.aug_modes[i]
             if isinstance(items, Resize):
                 logger.yellow("Resize augmentation detected. If you are using detectron2, please consider if you really need to use this method")
-            if "polygons" not in kwargs:
+            if "polygons" not in kwargs and "segmentations" not in kwargs:
                 if isinstance(items, Affine):
                     if self.aug_modes[i].rotate != [0,0]:
                         logger.yellow("polygons not found. Change affine to only rotate 90, 180, 270, 360")
                         self.aug_modes[i] = self.aug_modes[i].change_rotate_to_right_angle()
         
+        if 'segmentations' in kwargs:
+            # kwargs['segmentations'] = [
+            #     Segmentation([poly.fix_shapely_invalid() for poly in seg]) \
+            #         for seg in kwargs['segmentations']
+            # ]
+            kwargs['segmentations'] = [
+                Segmentation([poly for poly in seg if len(poly) >= 3]) \
+                    for seg in kwargs['segmentations']
+            ]
+            kwargs['segmentations'] = [seg for seg in kwargs['segmentations'] if len(seg) > 0]
+        working_polygons = None
+        orig_kwargs = kwargs.copy()
         for k,v in kwargs.items():
             if k == "image":
                 shape = kwargs["image"].shape
@@ -1001,13 +1013,23 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                     imgaug_kpts.keypoints.extend(item.to_imgaug(img_shape=kwargs["image"].shape).keypoints)
                 kwargs["keypoints"] = imgaug_kpts
             if k == "polygons":
-                         
+                if 'segmentations' in kwargs:
+                    raise Exception('Cannot use both polygons and segmentations parameters. Please use only one.')
                 if len(kwargs["polygons"]) == 0:
                      raise TypeError(f"polygons is empty")
                 for item in v:
                     # polygons_iaa =  v.to_imgaug(img_shape=kwargs["image"].shape).polygons
                     imgaug_polys.polygons.extend(item.to_imgaug(img_shape=kwargs["image"].shape).polygons)
-                kwargs["polygons"] = imgaug_polys
+                working_polygons = imgaug_polys
+            if k == "segmentations":
+                if 'polygons' in kwargs:
+                    raise Exception('Cannot use both polygons and segmentations parameters. Please use only one.')
+                for seg in v:
+                    seg = Segmentation.buffer(seg)
+                    if len(seg) == 0:
+                        raise Exception("Segmentation doesn't contain any polygons.")
+                    imgaug_polys.polygons.extend(seg.to_imgaug(img_shape=kwargs["image"].shape).polygons)
+                working_polygons = imgaug_polys
             if k == "bounding_boxes":
                 if len(kwargs["bounding_boxes"]) == 0:
                      raise TypeError(f"bounding_boxes is empty")
@@ -1016,61 +1038,74 @@ class AugHandler(BaseModeHandler['AugHandler', 'Any']):
                     imgaug_bboxes.bounding_boxes.append(item.to_imgaug())
                 kwargs["bounding_boxes"] = imgaug_bboxes
 
+        if working_polygons is not None:
+            kwargs["polygons"] = working_polygons
+        
+        imgaug_kwargs = kwargs.copy()
+        if 'segmentations' in imgaug_kwargs:
+            del imgaug_kwargs['segmentations']
+
         sequential_array = [iaa.Sometimes(aug_modes.frequency ,aug_modes.aug) if aug_modes.frequency is not None and float(aug_modes.frequency)> 0 and float(aug_modes.frequency) < 1 else aug_modes.aug if aug_modes.frequency is not None and float(aug_modes.frequency)>= 1  else None if aug_modes.frequency is not None and float(aug_modes.frequency)<= 0 else aug_modes.aug for aug_modes in self.aug_modes]
         sequential_array = [sublist for sublist in sequential_array if sublist]
-        seq = iaa.Sequential(sequential_array, random_order=self.random_order )
-        a = seq(*args, **kwargs)
+        seq = iaa.Sequential(sequential_array, random_order=self.random_order)
+        a = seq(*args, **imgaug_kwargs)
 
+        image = None
+        for items in a:
+            if isinstance(items, np.ndarray):
+                image = items
+                break
+        
         for items in a:
             if isinstance(items, KeypointsOnImage):
-                kpts_aug0 = Keypoint2D_List.from_imgaug(imgaug_kpts=items)
-                kpts_aug_list = kpts_aug0.to_numpy(demarcation=True)[:, :2].reshape(1, len(kpts_aug0), 2)
-                kpts_aug_list = [[[x, y, 2] for x, y in kpts_aug] for kpts_aug in kpts_aug_list]
-                kpts_aug_list = [Keypoint2D_List.from_list(kpts_aug, demarcation=True) for kpts_aug in kpts_aug_list]
+                kpt_aug_flat_list = Keypoint2D_List.from_imgaug(imgaug_kpts=items).to_numpy(demarcation=False).reshape(len(orig_kwargs["keypoints"]), -1)
+                kpts_aug_list = [Keypoint2D_List.from_numpy(kpt_aug_flat, demarcation=False) for kpt_aug_flat in kpt_aug_flat_list]
             elif isinstance(items, BoundingBoxesOnImage):
                 items.remove_out_of_image().clip_out_of_image()
                 bbox_aug_list = [BBox.from_imgaug(bbox_aug) for bbox_aug in items.bounding_boxes]
             elif isinstance(items, PolygonsOnImage):
-                items.remove_out_of_image().clip_out_of_image()
-                poly_aug_list = [Polygon.from_imgaug(imgaug_polygon) for imgaug_polygon in items.polygons]
-                bbox_aug_list_from_poly = [poly_aug.to_bbox() for poly_aug in poly_aug_list]
-                # Adjust BBoxes when Segmentation BBox does not contain all keypoints
-                # TODO need to consider this method
-                # for i in range(len(bbox_aug_list_from_poly)):
-                #     kpt_points_aug = [kpt_aug.point for kpt_aug in kpts_aug_list[i]]
-                #     kpt_points_aug_contained = [kpt_point_aug.within(bbox_aug_list_from_poly[i]) for kpt_point_aug in kpt_points_aug]
-                #     if not np.any(np.array(kpt_points_aug_contained)):
-                #         logger.error(f"Keypoints not contained in corresponding bbox.")
-                #     else:
-                #         if not np.all(np.array(kpt_points_aug_contained)):
-                #             kpt_points_aug_arr = np.array([kpt_point_aug.to_list() for kpt_point_aug in kpt_points_aug])
-                #             kpt_points_aug_arr = kpt_points_aug_arr[~np.all(kpt_points_aug_arr == 0, axis=1)]
-                #             kpt_xmin, kpt_ymin = np.min(kpt_points_aug_arr, axis=0).tolist()
-                #             kpt_xmax, kpt_ymax = np.max(kpt_points_aug_arr, axis=0).tolist()
-                #             bbox_aug_list_from_poly[i].xmin = kpt_xmin if kpt_xmin < bbox_aug_list_from_poly[i].xmin and kpt_xmin != 0 else bbox_aug_list_from_poly[i].xmin
-                #             bbox_aug_list_from_poly[i].ymin = kpt_ymin if kpt_ymin < bbox_aug_list_from_poly[i].ymin and kpt_xmin != 0 else bbox_aug_list_from_poly[i].ymin
-                #             bbox_aug_list_from_poly[i].xmax = kpt_xmax if kpt_xmax > bbox_aug_list_from_poly[i].xmax and kpt_xmin != 0 else bbox_aug_list_from_poly[i].xmax
-                #             bbox_aug_list_from_poly[i].ymax = kpt_ymax if kpt_ymax > bbox_aug_list_from_poly[i].ymax and kpt_xmin != 0 else bbox_aug_list_from_poly[i].ymax
-                #         break
-
-                seg_aug_list = [Segmentation([poly_aug]) for poly_aug in poly_aug_list]
+                if 'polygons' in orig_kwargs:
+                    items.remove_out_of_image().clip_out_of_image()
+                    poly_aug_list = [Polygon.from_imgaug(imgaug_polygon) for imgaug_polygon in items.polygons]
+                    bbox_aug_list_from_poly = [poly_aug.to_bbox() for poly_aug in poly_aug_list]
+                    seg_aug_list = [Segmentation([poly_aug]) for poly_aug in poly_aug_list]
+                elif 'segmentations' in orig_kwargs:
+                    part_sizes=[len(seg) for seg in kwargs["segmentations"]]
+                    flat_poly_aug_list = [Polygon.from_imgaug(imgaug_polygon, fix_invalid=True) for imgaug_polygon in items.polygons]
+                    poly_aug_list_list = unflatten_list(flat_poly_aug_list, part_sizes=part_sizes)
+                    seg_aug_list = [Segmentation(poly_aug_list0) for poly_aug_list0 in poly_aug_list_list]
+                    assert len(kwargs["segmentations"]) == len(seg_aug_list)
+                    assert image is not None
+                    for seg in seg_aug_list:
+                        seg.imgaug_based_prune(img_shape=image.shape, fully=True, partly=False)
+                    if isinstance(items, (Affine, ElasticTransformation, Crop)):
+                        bbox_aug_list_from_seg = [seg.to_bbox() for seg in seg_aug_list]
+                else:
+                    raise Exception
+            elif isinstance(items, np.ndarray):
+                continue
             else:
-                image = items
+                logger.error(f'Invalid type: {type(items)}')
+                raise Exception
 
+        if 'kpts_aug_list' in locals():
+            # TODO: Adjust BBox when keypoints fall outside of bbox
+            pass
+
+        assert 'bbox_aug_list' in locals()
         if 'bbox_aug_list_from_poly' in locals():
-            if 'bbox_aug_list' in locals():
-                bbox_aug_list = bbox_aug_list_from_poly
-        if 'poly_aug_list' in locals():
-            a = (image, bbox_aug_list, poly_aug_list)
-            if 'kpts_aug_list' in locals():
-                a = (image, kpts_aug_list, bbox_aug_list, poly_aug_list)
-        elif 'bbox_aug_list' in locals():
-            a = (image, bbox_aug_list)
-            if 'kpts_aug_list' in locals():
-                a = (image, kpts_aug_list, bbox_aug_list)
-
-        return a
-
+            bbox_aug_list = bbox_aug_list_from_poly
+        elif 'bbox_aug_list_from_seg' in locals():
+            bbox_aug_list = bbox_aug_list_from_seg
+        
+        a = [image]
+        if 'kpts_aug_list' in locals():
+            a.append(kpts_aug_list)
+        a.append(bbox_aug_list)
+        if 'seg_aug_list' in locals():
+            a.append(seg_aug_list)
+        
+        return tuple(a)
 
     def append_aug_modes(self, dict_list: List[dict]) -> []:
 
