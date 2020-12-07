@@ -11,7 +11,6 @@ from common_utils.check_utils import check_required_keys, \
     check_file_exists, check_list_length, check_type, \
     check_type_from_list
 
-from common_utils.cv_drawing_utils import cv_simple_image_viewer, draw_bbox, draw_keypoints, draw_segmentation
 from common_utils.common_types.keypoint import Keypoint2D_List, Keypoint2D
 from common_utils.common_types.bbox import BBox
 from common_utils.common_types.segmentation import Segmentation, Polygon
